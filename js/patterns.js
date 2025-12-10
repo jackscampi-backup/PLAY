@@ -130,11 +130,13 @@ const PATTERNS = {
     pop_ballad: {
         name: 'Ballad',
         genre: 'Pop',
-        bpm: 72,
-        kick:  [1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0],
-        snare: [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0],
-        hihat: [1,0,1,0, 1,0,1,0, 1,0,1,0, 1,0,1,0],
-        rim:   [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0]
+        bpm: 60,
+        timeSignature: '6/8',
+        // 6/8 ballad - 2 beats × 3 subdivisions
+        kick:  [1,0,0, 0,0,0],
+        snare: [0,0,0, 1,0,0],
+        hihat: [1,0,1, 1,0,1],
+        rim:   [0,0,0, 0,0,0]
     },
     pop_upbeat: {
         name: 'Upbeat',
