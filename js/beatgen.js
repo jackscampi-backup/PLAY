@@ -690,6 +690,11 @@ class BeatGenerator {
             this.applyGenreAudioPreset(genreKey);
         }
 
+        // Dispatch event for BASSIST to reset fretboard
+        window.dispatchEvent(new CustomEvent('drummerGenreChange', {
+            detail: { genre: genreKey }
+        }));
+
         this.renderVariationButtons(genreKey);
         const firstPattern = GENRES[genreKey].patterns[0];
         this.selectPattern(firstPattern);
@@ -727,6 +732,8 @@ class BeatGenerator {
 
         if (this.isPlaying) {
             this.stopSequence();
+            this.currentStep = 0;
+            this.currentBar = 0;
             this.startSequence();
         }
     }

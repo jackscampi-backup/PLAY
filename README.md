@@ -86,11 +86,12 @@ Visualizzatore interattivo per tastiera basso 4 corde (12 tasti).
 - **ROOT** - Seleziona la nota fondamentale (12 note cromatiche)
 - **SCALE** - Seleziona la scala da visualizzare
 - **VIEW** - Toggle per personalizzare la visualizzazione:
-  - **INT** - Mostra intervalli (R, b3, 5, b7) invece dei nomi note
   - **ARP** - Mostra solo arpeggio (note dell'accordo: R, 3, 5, 7)
   - **BOX** - Mostra solo la "box shape" (4-5 tasti) per posizione fissa
+  - **INT** - Mostra intervalli (R, b3, 5, b7) invece dei nomi note
   - **GROOVE** - Attiva la modalità groove (PLAY suona il groove invece della scala)
   - **PLAY** - Autoplay scala/groove sincronizzato col kick di DRUMMER
+- **Pattern Display** - Griglia 16 step sotto la fretboard che mostra il groove corrente (LED verde = nota)
 - **Header** - Toggle **ITA** per notazione italiana (Do, Re, Mi)
 
 **Audio:**
@@ -127,6 +128,9 @@ Visualizzatore interattivo per tastiera basso 4 corde (12 tasti).
 - **Filtri categoria**: ALL, ROOT LOCK, OCTAVE, PENTA, WALKING, FUNK
 - **Selezione**: Dropdown stile audio panel con difficolta' (★)
 - **Trasposizione automatica**: I groove si adattano alla ROOT selezionata!
+- **Auto-restart**: Cambiando ROOT durante il playback, il groove riparte trasposto
+- **Reset automatico**: Cambiando genere in DRUMMER la fretboard si resetta
+- **Pattern Display**: Griglia LED identica a DRUMMER che mostra le note del groove
 - **Drum accompaniment**: Beat semplice automatico quando DRUMMER e' fermo
 
 ### Categoria DRILL

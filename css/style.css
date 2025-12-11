@@ -929,6 +929,24 @@ body {
     margin-top: 10px;
 }
 
+/* Disabled state when GROOVE toggle is off - buttons visible but inactive */
+.groove-section.disabled {
+    pointer-events: none;
+}
+
+/* Prevent active states when disabled */
+.groove-section.disabled .groove-cat-btn {
+    color: #888;
+    border-color: #444;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+.groove-section.disabled .groove-cat-btn.active {
+    color: #888;
+    border-color: #444;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
 /* Groove categories - full width buttons in a row */
 .groove-categories {
     display: flex;
@@ -976,10 +994,9 @@ body {
     border-radius: 4px;
     color: var(--display-orange);
     font-family: 'Share Tech Mono', monospace;
-    font-size: 1.2rem;
+    font-size: 1rem;
     cursor: pointer;
     box-shadow: inset 0 2px 4px rgba(0,0,0,0.8);
-    margin-bottom: 8px;
     text-transform: uppercase;
 }
 
@@ -988,30 +1005,35 @@ body {
     color: var(--display-orange);
 }
 
-/* Groove info - single line, same font as buttons */
-.groove-info {
-    margin-top: 8px;
-    padding: 8px 10px;
-    background: rgba(0,0,0,0.3);
-    border-radius: 4px;
-    font-family: 'Oswald', sans-serif;
-    font-size: 0.75rem;
-    font-weight: 400;
-    letter-spacing: 1px;
-    color: #888;
+/* Bassist Bottom Section - Pattern + Controls */
+.bassist-bottom-section {
+    margin-top: 10px;
+}
+
+.bassist-bottom-layout {
     display: flex;
-    align-items: center;
-    gap: 8px;
+    gap: 15px;
+    align-items: stretch;
 }
 
-.groove-info .groove-desc {
+.bass-pattern-section {
+    width: 760px;  /* Same as DRUMMER pattern section (800px - 40px padding) */
+    flex-shrink: 0;
+    background: var(--panel-surface);
+    border-radius: 6px;
+    padding: 15px 0;
+    border: 1px solid #252525;
+}
+
+.bassist-control-box {
     flex: 1;
-    color: #777;
-}
-
-.groove-info .groove-difficulty {
-    color: #ff8c00;
-    letter-spacing: 2px;
+    background: var(--panel-surface);
+    border-radius: 6px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border: 1px solid #252525;
 }
 
 /* Root and Scale buttons */

@@ -232,10 +232,6 @@
             <section class="panel-section">
                 <div class="section-label">VIEW</div>
                 <div class="button-grid view-grid">
-                    <button class="display-toggle" id="displayToggle" onclick="fretboard.toggleDisplay()">
-                        <span class="toggle-led"></span>
-                        <span class="toggle-label">INT</span>
-                    </button>
                     <button class="display-toggle" id="arpToggle" onclick="fretboard.toggleArpeggio()">
                         <span class="toggle-led"></span>
                         <span class="toggle-label">ARP</span>
@@ -243,6 +239,10 @@
                     <button class="display-toggle" id="shapeToggle" onclick="fretboard.toggleShape()">
                         <span class="toggle-led"></span>
                         <span class="toggle-label">BOX</span>
+                    </button>
+                    <button class="display-toggle" id="displayToggle" onclick="fretboard.toggleDisplay()">
+                        <span class="toggle-led"></span>
+                        <span class="toggle-label">INT</span>
                     </button>
                     <button class="display-toggle" id="grooveToggle" onclick="fretboard.toggleGrooveMode()">
                         <span class="toggle-led"></span>
@@ -264,15 +264,58 @@
                 <select class="audio-select groove-select-full" id="grooveSelect" onchange="fretboard.selectGroove(this.value)">
                     <option value="">-- Select --</option>
                 </select>
-                <div class="groove-info" id="grooveInfo">
-                    <!-- Shows description when groove selected -->
-                </div>
             </section>
 
             <!-- Fretboard -->
             <section class="panel-section fretboard-section">
                 <div id="fretboard" class="fretboard">
                     <!-- Populated by JS -->
+                </div>
+            </section>
+
+            <!-- Groove Pattern Display (under fretboard) -->
+            <section class="panel-section bassist-bottom-section">
+                <div class="bassist-bottom-layout">
+                    <!-- Pattern Grid (same as DRUMMER) -->
+                    <div class="bass-pattern-section" id="groovePatternDisplay">
+                        <div class="pattern-grid">
+                            <!-- Beat Counter Row -->
+                            <div class="beat-row">
+                                <div class="beat-group">
+                                    <span class="beat-num" data-beat="1">1</span>
+                                    <span class="beat-dot">·</span>
+                                    <span class="beat-dot">·</span>
+                                    <span class="beat-dot">·</span>
+                                </div>
+                                <div class="beat-group">
+                                    <span class="beat-num" data-beat="2">2</span>
+                                    <span class="beat-dot">·</span>
+                                    <span class="beat-dot">·</span>
+                                    <span class="beat-dot">·</span>
+                                </div>
+                                <div class="beat-group">
+                                    <span class="beat-num" data-beat="3">3</span>
+                                    <span class="beat-dot">·</span>
+                                    <span class="beat-dot">·</span>
+                                    <span class="beat-dot">·</span>
+                                </div>
+                                <div class="beat-group">
+                                    <span class="beat-num" data-beat="4">4</span>
+                                    <span class="beat-dot">·</span>
+                                    <span class="beat-dot">·</span>
+                                    <span class="beat-dot">·</span>
+                                </div>
+                            </div>
+                            <!-- Bass Step Row -->
+                            <div class="step-row" id="grooveStepRow">
+                                <!-- Populated by JS - 16 steps -->
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Control Box (right side) -->
+                    <div class="bassist-control-box">
+                        <!-- Space for future controls -->
+                    </div>
                 </div>
             </section>
         </main>

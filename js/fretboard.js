@@ -97,7 +97,9 @@ class Fretboard {
         this.renderFretboard();
         this.renderGrooveCategories();
         this.renderGrooveSelect();
+        this.renderGroovePatternDisplay();
         this.updateDisplay();
+        this.updateGrooveSectionState();  // Start with groove section disabled
 
         // Listen for DRUMMER pattern changes to auto-resync
         window.addEventListener('drummerPatternChange', (e) => {
@@ -107,6 +109,128 @@ class Fretboard {
                 this.startPlay();
             }
         });
+
+        // Listen for DRUMMER genre changes to reset fretboard
+        window.addEventListener('drummerGenreChange', () => {
+            this.clearFretboard();
+        });
+    }
+
+    /**
+     * Render the 16-step groove pattern display (same structure as DRUMMER)
+     */
+    renderGroovePatternDisplay() {
+        const container = document.getElementById('grooveStepRow');
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        // Create 4 beat groups, each with 4 steps (same as DRUMMER)
+        for (let beat = 0; beat < 4; beat++) {
+            const beatGroup = document.createElement('div');
+            beatGroup.className = 'beat-group-steps';
+
+            for (let s = 0; s < 4; s++) {
+                const stepIndex = beat * 4 + s;
+                const step = document.createElement('div');
+                step.className = 'step';
+                step.dataset.step = stepIndex;
+                beatGroup.appendChild(step);
+            }
+            container.appendChild(beatGroup);
+        }
+    }
+
+    /**
+     * Update groove pattern display when a groove is selected
+     */
+    updateGroovePatternDisplay() {
+        const steps = document.querySelectorAll('#grooveStepRow .step');
+
+        // Clear all
+        steps.forEach(step => {
+            step.classList.remove('active', 'playing');
+        });
+
+        if (!this.currentGroove) return;
+
+        // Mark active steps (where there's a note)
+        const grooveSteps = this.currentGroove.steps;
+        const stepsPerBar = 16;
+
+        // Only show first bar in display
+        for (let i = 0; i < Math.min(stepsPerBar, grooveSteps.length); i++) {
+            if (grooveSteps[i] !== null) {
+                const stepEl = document.querySelector(`#grooveStepRow .step[data-step="${i}"]`);
+                if (stepEl) stepEl.classList.add('active');
+            }
+        }
+    }
+
+    /**
+     * Highlight current step in groove pattern display
+     */
+    highlightGrooveStep(stepIndex) {
+        const steps = document.querySelectorAll('#grooveStepRow .step');
+        steps.forEach(step => step.classList.remove('playing'));
+
+        // Show step within first bar (modulo 16)
+        const displayStep = stepIndex % 16;
+        const stepEl = document.querySelector(`#grooveStepRow .step[data-step="${displayStep}"]`);
+        if (stepEl) stepEl.classList.add('playing');
+
+        // Update beat counter
+        this.updateGrooveBeatCounter(displayStep);
+    }
+
+    /**
+     * Update beat counter in groove display
+     */
+    updateGrooveBeatCounter(step) {
+        const beat = Math.floor(step / 4) + 1;
+
+        document.querySelectorAll('#groovePatternDisplay .beat-num').forEach(beatEl => {
+            const beatNum = parseInt(beatEl.dataset.beat);
+            beatEl.classList.toggle('active', beatNum === beat);
+        });
+    }
+
+    /**
+     * Clear groove pattern display
+     */
+    clearGroovePatternDisplay() {
+        document.querySelectorAll('#grooveStepRow .step').forEach(step => {
+            step.classList.remove('active', 'playing');
+        });
+        document.querySelectorAll('#groovePatternDisplay .beat-num').forEach(beat => {
+            beat.classList.remove('active');
+        });
+    }
+
+    /**
+     * Clear all highlights from fretboard (reset to neutral state)
+     */
+    clearFretboard() {
+        // Remove all highlight classes
+        document.querySelectorAll('.note').forEach(note => {
+            note.classList.remove('playing', 'riff-note');
+        });
+
+        // Stop any playback
+        if (this.isPlaying) {
+            this.stopPlay();
+        }
+        if (this.isPlayingGroove) {
+            this.stopGroovePlay();
+        }
+
+        // Reset groove selection
+        this.currentGroove = null;
+        const select = document.getElementById('grooveSelect');
+        if (select) select.value = '';
+
+        // Re-apply scale display (keeps root/scale but clears groove highlights)
+        this.updateDisplay();
     }
 
     // Get note display name based on notation setting
@@ -230,6 +354,9 @@ class Fretboard {
             btn.classList.toggle('active', btn.dataset.note === note);
         });
 
+        // Clear fretboard highlights before updating
+        this.clearPlayingHighlights();
+
         this.updateDisplay();
 
         // Update groove display if one is selected
@@ -237,7 +364,29 @@ class Fretboard {
             this.displayGroove();
         }
 
+        // Resync groove or scale playback with new root
         this.resyncIfPlaying();
+        this.resyncGrooveIfPlaying();
+    }
+
+    /**
+     * Resync groove playback if currently playing (when root changes)
+     */
+    resyncGrooveIfPlaying() {
+        if (this.isPlayingGroove) {
+            console.log('BASSIST: Resync groove to new root:', this.rootNote);
+            this.stopGroovePlay();
+            this.startGroovePlay();
+        }
+    }
+
+    /**
+     * Clear only playing highlights (not groove/scale notes)
+     */
+    clearPlayingHighlights() {
+        document.querySelectorAll('.note.playing').forEach(note => {
+            note.classList.remove('playing');
+        });
     }
 
     selectScale(scaleKey) {
@@ -252,6 +401,9 @@ class Fretboard {
         document.querySelectorAll('.scale-btn').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.scale === this.currentScale);
         });
+
+        // Clear playing highlights before updating
+        this.clearPlayingHighlights();
 
         this.updateDisplay();
         this.resyncIfPlaying();
@@ -380,6 +532,9 @@ class Fretboard {
             grooveToggle.classList.toggle('active', this.grooveModeActive);
         }
 
+        // Enable/disable groove section controls
+        this.updateGrooveSectionState();
+
         // If deactivating groove mode and playing groove, stop it
         if (!this.grooveModeActive && this.isPlayingGroove) {
             this.stopGroovePlay();
@@ -395,6 +550,30 @@ class Fretboard {
                 n.classList.remove('riff-note');
             });
             this.updateDisplay();
+        }
+    }
+
+    /**
+     * Update groove section enabled/disabled state based on grooveModeActive
+     */
+    updateGrooveSectionState() {
+        const grooveSection = document.querySelector('.groove-section');
+        if (grooveSection) {
+            grooveSection.classList.toggle('disabled', !this.grooveModeActive);
+        }
+
+        // Reset category buttons active state when disabled
+        if (!this.grooveModeActive) {
+            document.querySelectorAll('.groove-cat-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+        } else {
+            // When enabling, set ALL as active (or current category)
+            document.querySelectorAll('.groove-cat-btn').forEach(btn => {
+                const isAll = !btn.dataset.category;
+                const isMatch = isAll ? !this.selectedCategory : btn.dataset.category === this.selectedCategory;
+                btn.classList.toggle('active', isMatch);
+            });
         }
     }
 
@@ -633,9 +812,9 @@ class Fretboard {
 
         container.innerHTML = '';
 
-        // Add "ALL" button
+        // Add "ALL" button (no active class - starts disabled)
         const allBtn = document.createElement('button');
-        allBtn.className = 'groove-cat-btn active';
+        allBtn.className = 'groove-cat-btn';
         allBtn.textContent = 'ALL';
         allBtn.onclick = () => this.filterByCategory(null);
         container.appendChild(allBtn);
@@ -675,7 +854,7 @@ class Fretboard {
         const select = document.getElementById('grooveSelect');
         if (!select) return;
 
-        select.innerHTML = '<option value="">-- Select --</option>';
+        select.innerHTML = '<option value="">-- Select Groove --</option>';
 
         const grooves = this.selectedCategory
             ? getGroovesByCategory(this.selectedCategory)
@@ -685,7 +864,8 @@ class Fretboard {
             const option = document.createElement('option');
             option.value = groove.id;
             const stars = '★'.repeat(groove.difficulty);
-            option.textContent = `${groove.name} ${stars}`;
+            // Format: NAME - desc - BPM - ★★
+            option.textContent = `${groove.name} - ${groove.description} - ${groove.bpm} BPM - ${stars}`;
             select.appendChild(option);
         });
     }
@@ -694,10 +874,20 @@ class Fretboard {
      * Select a groove and display it
      */
     selectGroove(grooveId) {
+        // Clear previous groove highlights first
+        document.querySelectorAll('.note.riff-note, .note.playing').forEach(note => {
+            note.classList.remove('riff-note', 'playing');
+        });
+
+        // Stop playback if running
+        if (this.isPlayingGroove) {
+            this.stopGroovePlay();
+        }
+
         if (!grooveId) {
             this.currentGroove = null;
-            this.updateGrooveInfo();
             this.updateDisplay();
+            this.clearGroovePatternDisplay();
             return;
         }
 
@@ -705,14 +895,7 @@ class Fretboard {
         if (this.currentGroove) {
             console.log('BASSIST: Selected groove:', this.currentGroove.name);
             this.displayGroove();
-            this.updateGrooveInfo();
-
-            // Activate groove mode when a groove is selected
-            if (!this.grooveModeActive) {
-                this.grooveModeActive = true;
-                const grooveToggle = document.getElementById('grooveToggle');
-                if (grooveToggle) grooveToggle.classList.add('active');
-            }
+            this.updateGroovePatternDisplay();
         }
     }
 
@@ -726,26 +909,6 @@ class Fretboard {
             if (select) select.value = groove.id;
             this.selectGroove(groove.id);
         }
-    }
-
-    /**
-     * Update groove info panel
-     */
-    updateGrooveInfo() {
-        const info = document.getElementById('grooveInfo');
-        if (!info) return;
-
-        if (!this.currentGroove) {
-            info.innerHTML = '';
-            return;
-        }
-
-        const g = this.currentGroove;
-        const stars = '★'.repeat(g.difficulty);
-        info.innerHTML = `
-            <span class="groove-desc">${g.description} - ${g.bpm} BPM - ${g.bars} bar${g.bars > 1 ? 's' : ''}</span>
-            <span class="groove-difficulty">${stars}</span>
-        `;
     }
 
     /**
@@ -814,10 +977,12 @@ class Fretboard {
                     bassSound.play(null, step.s, step.f, '16n');
                     Tone.Draw.schedule(() => {
                         this.highlightGrooveNote(step);
+                        this.highlightGrooveStep(stepIndex);
                     }, time);
                 } else {
                     Tone.Draw.schedule(() => {
                         this.highlightGrooveNote(null);
+                        this.highlightGrooveStep(stepIndex);
                     }, time);
                 }
             },
@@ -907,6 +1072,14 @@ class Fretboard {
         }
 
         this.highlightGrooveNote(null);
+
+        // Clear playing highlight but keep active notes
+        document.querySelectorAll('#grooveStepRow .step').forEach(step => {
+            step.classList.remove('playing');
+        });
+        document.querySelectorAll('#groovePatternDisplay .beat-num').forEach(beat => {
+            beat.classList.remove('active');
+        });
     }
 
     /**
