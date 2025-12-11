@@ -125,7 +125,7 @@ Visualizzatore interattivo per tastiera basso 4 corde (12 tasti).
 
 ### Sezione GROOVES (BASSIST)
 
-**40 pattern di basso** per esercitarsi con loop, organizzati in 5 categorie:
+**44 pattern di basso** per esercitarsi con loop, organizzati in 6 categorie:
 
 | Categoria | Grooves | Descrizione |
 |-----------|---------|-------------|
@@ -134,9 +134,10 @@ Visualizzatore interattivo per tastiera basso 4 corde (12 tasti).
 | **BLUES** | 7 | Slow blues, shuffle, walking, turnaround, 12-bar, Texas shuffle |
 | **FUNK** | 8 | On the one, syncopation, ghost notes, slap, JB style, Larry Graham |
 | **DISCO** | 9 | Octave pump, Chic style, disco runs, slap disco |
+| **TRIP-HOP** | 4 | Bristol style: Deep Space, Shadow Walk, Fallen Angel, Heat Wave |
 
 **Funzionalita':**
-- **Filtri categoria**: ALL, FOUNDATION, ROCK, BLUES, FUNK, DISCO
+- **Filtri categoria**: ALL, FOUNDATION, ROCK, BLUES, FUNK, DISCO, TRIP-HOP
 - **Selezione**: Dropdown con difficolta' (1-4 stelle)
 - **Trasposizione automatica**: I groove si adattano alla ROOT selezionata!
 - **Auto-restart**: Cambiando ROOT durante il playback, il groove riparte trasposto
