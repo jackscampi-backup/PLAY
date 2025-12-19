@@ -1,19 +1,21 @@
-# DRUMMER + BASSIST
+# DRUMMER + MELODY + BASSIST
 
-Suite di strumenti web per bassisti - Drum machine + Visualizzatore scale in stile rack/flycase.
+Suite di strumenti web per bassisti - Drum machine + Accompagnamento armonico + Visualizzatore scale in stile rack/flycase.
 
 **[Prova online](https://jackscampi-backup.github.io/Drummer)**
 
 ## Descrizione
 
-Due moduli integrati per esercitarsi al basso:
+Tre moduli integrati per esercitarsi al basso:
 
 1. **DRUMMER** - Genera pattern di batteria in tempo reale usando Tone.js
-2. **BASSIST** - Visualizza scale, arpeggi, grooves e box position sulla tastiera del basso
+2. **MELODY** - Accompagnamento armonico con progressioni di accordi
+3. **BASSIST** - Visualizza scale, arpeggi, grooves e box position sulla tastiera del basso
 
-Interfaccia in stile **rack unit da tour flycase** con tre moduli:
+Interfaccia in stile **rack unit da tour flycase** con quattro moduli:
 - **DRUMMER** - Selezione generi e pattern
 - **AUDIO** - Controllo suoni e mixer
+- **MELODY** - Progressioni di accordi sincronizzate
 - **BASSIST** - Tastiera basso interattiva (full-width)
 
 Design hardware professionale:
@@ -78,6 +80,46 @@ Design hardware professionale:
 | **Reggae** | OneDrop, Rockers, Steppers, Ska, Dub, RootsSl., Dancehall, StepFast | |
 | **Electro** | Massive, Tricky, Fugees, DeLa, Slim, Portis, Morch, Hip-Hop | Trip-Hop |
 
+### Modulo MELODY
+
+Accompagnamento armonico per praticare improvvisazione e groove.
+
+**Controlli:**
+- **KEY** - 12 note cromatiche (da E, come BASSIST)
+- **MODE** - CHORDS (accordi) o MELODY (linee melodiche)
+- **PATTERN** - Dropdown con 12 progressioni in 6 generi
+- **SOUND** - Piano o Organ (Hammond style)
+- **OCTAVE** - Controllo +/- (1-5)
+- **VOL** - Volume slider
+- **ITA** - Toggle notazione italiana (Do, Re, Mi)
+
+**Display:**
+- Nome accordo (es. Emaj7, Am7)
+- Note dell'accordo
+- **Mini-fretboard** - Visualizza dove suonare sul basso (R = root arancione, pallini verdi = altre note)
+
+**Pattern disponibili:**
+
+| Genere | Pattern | Accordi |
+|--------|---------|---------|
+| **Foundation** | Triads | I - IV - V |
+| **Foundation** | Fifths | I - V |
+| **Rock** | Classic | I - IV - V |
+| **Rock** | Anthem | I - V - vi - IV |
+| **Blues** | 12 Bar | I7-IV7-I7-V7 (12 battute) |
+| **Blues** | Turnaround | I7 - VI7 - ii7 - V7 |
+| **Funk** | Vamp | i7 (un accordo) |
+| **Funk** | Two Chord | i7 - IV7 |
+| **Disco** | Groove | Imaj7 - IVmaj7 - vi7 - V7 |
+| **Disco** | Classic | vi7 - ii7 - V7 - Imaj7 |
+| **Trip-Hop** | Dark | i7 - bVII |
+| **Trip-Hop** | Moody | i7 - iv7 |
+
+**Sync con BASSIST:**
+- Attiva **MEL** nel menu VIEW del BASSIST
+- Il fretboard grande mostra le note dell'accordo corrente
+- Quando cambia accordo, il fretboard si aggiorna automaticamente
+
 ### Modulo BASSIST
 
 Visualizzatore interattivo per tastiera basso 4 corde (12 tasti).
@@ -90,6 +132,7 @@ Visualizzatore interattivo per tastiera basso 4 corde (12 tasti).
   - **BOX** - Mostra solo la "box shape" (4-5 tasti) per posizione fissa
   - **INT** - Mostra intervalli (R, b3, 5, b7) invece dei nomi note
   - **GROOVE** - Attiva la modalita' groove con sync DRUMMER
+  - **MEL** - Mostra note dell'accordo corrente dal modulo MELODY
 - **Pattern Display** - Griglia 16 step sotto la fretboard che mostra il groove corrente (LED verde = nota)
 - **BPM Control** - Display LED con bottoni +/- per regolare il tempo (sincronizzato con DRUMMER)
 - **Header**:
@@ -225,9 +268,10 @@ DRUMMER/
     ├── app.js          # Inizializzazione
     ├── beatgen.js      # DRUMMER - Generatore beat (Tone.js)
     ├── patterns.js     # DRUMMER - 64 pattern di batteria
+    ├── melody-gen.js   # MELODY - Generatore accordi e progressioni
     ├── scales.js       # BASSIST - Scale e arpeggi
     ├── sounds.js       # BASSIST - Sintetizzatore basso
-    ├── fretboard.js    # BASSIST - Visualizzatore tastiera + sync DRUMMER
+    ├── fretboard.js    # BASSIST - Visualizzatore tastiera + sync DRUMMER/MELODY
     └── riffs.js        # BASSIST - Libreria grooves (40 pattern con drum match)
 ```
 

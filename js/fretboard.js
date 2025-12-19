@@ -12,6 +12,11 @@ class Fretboard {
         this.shapeWidth = 4;  // Shape covers 4 frets (e.g., frets 0-3, or 5-8)
         this.showArpeggio = false;  // Show only chord tones (R, 3, 5, 7)
 
+        // Melody sync state
+        this.melodySyncActive = false;  // Toggle controlled by user
+        this.showMelodyMode = false;
+        this.melodyChordNotes = null;
+
         // Autoplay state
         this.isPlaying = false;
         this.scaleSequence = null;
@@ -413,12 +418,19 @@ class Fretboard {
     }
 
     updateDisplay() {
-        // Get notes to display based on arpeggio mode (empty if no scale selected)
-        const scaleNotes = this.currentScale
-            ? (this.showArpeggio
+        // Get notes to display based on mode
+        let scaleNotes = [];
+        let isMelodyMode = this.showMelodyMode && this.melodyChordNotes;
+
+        if (isMelodyMode) {
+            // Use melody chord notes
+            scaleNotes = this.melodyChordNotes;
+        } else if (this.currentScale) {
+            // Use scale/arpeggio notes
+            scaleNotes = this.showArpeggio
                 ? getArpeggioNotes(this.rootNote, this.currentScale)
-                : getScaleNotes(this.rootNote, this.currentScale))
-            : [];
+                : getScaleNotes(this.rootNote, this.currentScale);
+        }
 
         document.querySelectorAll('.note').forEach(noteDiv => {
             const note = noteDiv.dataset.note;
@@ -426,15 +438,15 @@ class Fretboard {
             const inShape = this.isInShape(fret);
 
             // Reset classes
-            noteDiv.classList.remove('in-scale', 'root', 'out-of-shape', 'in-arpeggio');
+            noteDiv.classList.remove('in-scale', 'root', 'out-of-shape', 'in-arpeggio', 'melody-chord');
 
-            // If no scale selected, show nothing
-            if (!this.currentScale) {
+            // If no notes to show, just display note name
+            if (scaleNotes.length === 0) {
                 noteDiv.textContent = this.getDisplayNote(note);
                 return;
             }
 
-            // Check if note is in scale/arpeggio AND in shape (if shape mode is on)
+            // Check if note is root or in chord/scale
             const isNoteRoot = isRoot(note, this.rootNote);
             const isNoteInScale = scaleNotes.includes(note);
 
@@ -1156,6 +1168,66 @@ class Fretboard {
                 noteEl.classList.add('playing');
             }
         }
+    }
+
+    /**
+     * Show chord notes from MELODY module
+     * @param {string} root - Root note (e.g., 'E', 'A')
+     * @param {string[]} chordNotes - Array of note names without octave (e.g., ['E', 'G#', 'B'])
+     */
+    showMelodyChord(root, chordNotes) {
+        // Only show if melody sync is active
+        if (!this.melodySyncActive) return;
+
+        console.log('BASS: showMelodyChord', root, chordNotes);
+
+        // Update root note
+        this.rootNote = root;
+
+        // Store chord notes for rendering
+        this.melodyChordNotes = chordNotes;
+        this.showMelodyMode = true;
+
+        // Update root buttons UI
+        document.querySelectorAll('.root-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.root === root);
+        });
+
+        // Update display to show chord notes
+        this.updateDisplay();
+    }
+
+    /**
+     * Clear melody chord display
+     */
+    clearMelodyChord() {
+        this.melodyChordNotes = null;
+        this.showMelodyMode = false;
+        if (this.melodySyncActive) {
+            this.updateDisplay();
+        }
+    }
+
+    /**
+     * Toggle melody sync mode
+     */
+    toggleMelodySync() {
+        this.melodySyncActive = !this.melodySyncActive;
+
+        // Update toggle button UI
+        const melodyToggle = document.getElementById('melodyToggle');
+        if (melodyToggle) {
+            melodyToggle.classList.toggle('active', this.melodySyncActive);
+        }
+
+        // Clear melody display if turning off
+        if (!this.melodySyncActive) {
+            this.showMelodyMode = false;
+            this.melodyChordNotes = null;
+        }
+
+        this.updateDisplay();
+        console.log('BASS: Melody sync', this.melodySyncActive ? 'ON' : 'OFF');
     }
 }
 

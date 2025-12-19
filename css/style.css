@@ -794,6 +794,237 @@ body {
     align-items: center;
 }
 
+/* ===== MELODY RACK ===== */
+.rack-melody {
+    width: 1100px;
+    flex-shrink: 0;
+}
+
+.rack-melody .rack-header {
+    justify-content: center;
+    padding: 15px 40px;
+    position: relative;
+}
+
+.melody-panel {
+    padding: 25px 30px;
+}
+
+/* Key grid - 12 chromatic buttons in 1 row */
+.melody-panel .key-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 6px;
+}
+
+/* Melody row - horizontal layout */
+.melody-row {
+    display: flex;
+    gap: 20px;
+    align-items: flex-end;
+}
+
+.melody-control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.melody-pattern-group {
+    flex: 1;
+}
+
+.melody-vol-group {
+    flex: 1;
+}
+
+/* Mode toggle compact - 2 buttons horizontal */
+.mode-toggle-compact {
+    display: flex;
+    gap: 8px;
+}
+
+/* Octave control - like BPM */
+.melody-octave-control {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.melody-octave-control .bpm-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 1.2rem;
+}
+
+.octave-display {
+    width: 40px;
+    height: 36px;
+    background: #000;
+    border-radius: 4px;
+    border: 2px solid #333;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.8);
+    font-family: '7LED', monospace;
+    font-size: 24px;
+    color: var(--display-orange);
+    text-shadow: 0 0 10px var(--display-glow);
+    text-align: center;
+    line-height: 32px;
+    display: inline-block;
+}
+
+/* Sound select compact */
+.melody-panel .audio-select {
+    min-width: 120px;
+    font-family: '7LED', monospace;
+    font-size: 1.1rem;
+    padding: 8px 12px;
+    text-transform: uppercase;
+}
+
+/* Chord display - LCD box */
+.chord-display {
+    background: #000;
+    border: 2px solid #333;
+    border-radius: 4px;
+    padding: 20px;
+    min-height: 100px;
+    box-shadow: inset 0 2px 8px rgba(0,0,0,0.8);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+.chord-name {
+    font-family: '7LED', 'DSEG7', 'Share Tech Mono', monospace;
+    font-size: 2rem;
+    color: var(--display-orange);
+    text-shadow:
+        0 0 10px var(--display-glow),
+        0 0 20px rgba(255,102,0,0.3);
+    letter-spacing: 2px;
+    font-weight: normal;
+}
+
+.chord-notes {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.9rem;
+    color: var(--display-orange);
+    opacity: 0.8;
+    letter-spacing: 3px;
+}
+
+/* Melody display row - display + mini fretboard side by side */
+.melody-display-row {
+    display: flex;
+    gap: 20px;
+    align-items: stretch;
+}
+
+.melody-display-row .chord-display {
+    flex: 0 0 200px;
+    min-height: auto;
+}
+
+/* Mini Fretboard */
+.mini-fretboard {
+    flex: 1;
+    background: #1a1a1a;
+    border-radius: 4px;
+    padding: 10px 15px;
+    border: 1px solid #333;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.mini-string {
+    display: flex;
+    align-items: center;
+    height: 28px;
+}
+
+.mini-string-label {
+    width: 25px;
+    font-family: 'Oswald', sans-serif;
+    font-size: 0.75rem;
+    color: #666;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.mini-frets {
+    display: flex;
+    flex: 1;
+    position: relative;
+}
+
+.mini-fret {
+    flex: 1;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    border-right: 2px solid #444;
+    background: linear-gradient(180deg, #2a2a2a 0%, #1f1f1f 50%, #1a1a1a 100%);
+}
+
+.mini-fret.mini-nut {
+    flex: 0 0 30px;
+    background: linear-gradient(90deg, #555 0%, #444 50%, #333 100%);
+    border-right: 3px solid #666;
+}
+
+.mini-fret.marker {
+    background: linear-gradient(180deg, #2d2d2d 0%, #222 50%, #1d1d1d 100%);
+}
+
+/* String line */
+.mini-fret::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(180deg, #888 0%, #555 100%);
+    border-radius: 1px;
+}
+
+/* Mini note dot */
+.mini-fret .mini-note {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Oswald', sans-serif;
+    font-size: 0.6rem;
+    font-weight: 600;
+    z-index: 2;
+    opacity: 0;
+    transition: all 0.15s ease;
+}
+
+.mini-fret .mini-note.active {
+    opacity: 1;
+    background: var(--led-green-dim);
+    color: #fff;
+    border: 2px solid var(--led-green);
+    box-shadow: 0 0 8px rgba(51, 255, 51, 0.3);
+}
+
+.mini-fret .mini-note.root {
+    opacity: 1;
+    background: var(--display-orange);
+    color: #000;
+    border: 2px solid #ffaa00;
+    box-shadow: 0 0 10px var(--display-glow);
+}
+
 /* BASSIST panel - full width */
 .rack-bassist {
     width: 1100px;  /* 800 + 280 + 20 gap */
@@ -894,6 +1125,12 @@ body {
 /* View toggle grid - 4 buttons */
 .view-grid-4 {
     grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+}
+
+/* View toggle grid - 5 buttons */
+.view-grid-5 {
+    grid-template-columns: repeat(5, 1fr);
     gap: 8px;
 }
 
@@ -1341,8 +1578,13 @@ body {
     border-radius: 5px;
 }
 
-/* ===== BASSIST RESPONSIVE ===== */
+/* ===== MELODY & BASSIST RESPONSIVE ===== */
 @media (max-width: 1150px) {
+    .rack-melody {
+        width: 100%;
+        max-width: 800px;
+    }
+
     .rack-bassist {
         width: 100%;
         max-width: 800px;

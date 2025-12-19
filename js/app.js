@@ -11,6 +11,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // Esponi globalmente per BASSIST sync
     window.beatGen = beatGen;
 
+    // Inizializza melody generator
+    const melodyGen = new MelodyGenerator();
+    window.melodyGen = melodyGen;
+
+    // Sync MELODY con DRUMMER pattern changes
+    window.addEventListener('drummerPatternChange', (e) => {
+        const pattern = PATTERNS[e.detail.pattern];
+        melodyGen.syncToPattern(pattern);
+    });
+
     // Setup BASSIST BPM controls (sync with main BPM)
     const bassBpmMinus = document.getElementById('bassBpmMinus');
     const bassBpmPlus = document.getElementById('bassBpmPlus');

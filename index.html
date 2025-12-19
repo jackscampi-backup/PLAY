@@ -194,6 +194,170 @@
     </div>
     </div><!-- /rack-container -->
 
+    <!-- MELODY Unit -->
+    <div class="rack-unit rack-melody">
+        <!-- Viti angolari -->
+        <div class="rack-screw top-left"></div>
+        <div class="rack-screw top-right"></div>
+        <div class="rack-screw bottom-left"></div>
+        <div class="rack-screw bottom-right"></div>
+
+        <!-- Header -->
+        <header class="rack-header">
+            <div class="header-toggles-left">
+                <button class="display-toggle" id="melodyPlayBtn">
+                    <span class="toggle-led"></span>
+                    <span class="toggle-label">ON</span>
+                </button>
+            </div>
+            <div class="logo-display">MELODY</div>
+            <div class="header-toggles-right">
+                <button class="display-toggle" id="melodyNotationToggle">
+                    <span class="toggle-led"></span>
+                    <span class="toggle-label">ITA</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Panel -->
+        <main class="rack-panel melody-panel">
+
+            <!-- Row 1: KEY -->
+            <section class="panel-section">
+                <div class="section-label">KEY</div>
+                <div class="button-grid key-grid" id="melodyKeyButtons">
+                    <button class="root-btn" data-key="E">E</button>
+                    <button class="root-btn" data-key="F">F</button>
+                    <button class="root-btn" data-key="F#">F#</button>
+                    <button class="root-btn" data-key="G">G</button>
+                    <button class="root-btn" data-key="G#">G#</button>
+                    <button class="root-btn" data-key="A">A</button>
+                    <button class="root-btn" data-key="A#">A#</button>
+                    <button class="root-btn" data-key="B">B</button>
+                    <button class="root-btn" data-key="C">C</button>
+                    <button class="root-btn" data-key="C#">C#</button>
+                    <button class="root-btn" data-key="D">D</button>
+                    <button class="root-btn" data-key="D#">D#</button>
+                </div>
+            </section>
+
+            <!-- Row 2: MODE + PATTERN dropdown -->
+            <section class="panel-section melody-row">
+                <div class="melody-control-group">
+                    <div class="section-label">MODE</div>
+                    <div class="mode-toggle-compact">
+                        <button class="display-toggle" id="melodyChordsBtn">
+                            <span class="toggle-led"></span>
+                            <span class="toggle-label">CHORDS</span>
+                        </button>
+                        <button class="display-toggle" id="melodyMelodyBtn">
+                            <span class="toggle-led"></span>
+                            <span class="toggle-label">MELODY</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="melody-control-group melody-pattern-group">
+                    <div class="section-label">PATTERN</div>
+                    <select class="groove-select-full" id="melodyPatternSelect">
+                        <option value="">-- Select --</option>
+                    </select>
+                </div>
+            </section>
+
+            <!-- Row 3: SOUND + OCTAVE + VOLUME -->
+            <section class="panel-section melody-row">
+                <div class="melody-control-group">
+                    <div class="section-label">SOUND</div>
+                    <select class="audio-select" id="melodySoundSelect">
+                        <option value="piano">PIANO</option>
+                        <option value="organ">ORGAN</option>
+                    </select>
+                </div>
+                <div class="melody-control-group">
+                    <div class="section-label">OCTAVE</div>
+                    <div class="melody-octave-control">
+                        <button class="bpm-btn" id="melodyOctMinus">-</button>
+                        <span class="octave-display" id="melodyOctDisplay">3</span>
+                        <button class="bpm-btn" id="melodyOctPlus">+</button>
+                    </div>
+                </div>
+                <div class="melody-control-group melody-vol-group">
+                    <div class="section-label">VOL</div>
+                    <input type="range" class="audio-slider" id="melodyVolume" min="0" max="100" value="70">
+                </div>
+            </section>
+
+            <!-- Row 4: Display + Mini Fretboard -->
+            <section class="panel-section">
+                <div class="melody-display-row">
+                    <!-- Chord Display -->
+                    <div class="chord-display" id="chordDisplay">
+                        <div class="chord-name" id="chordName">—</div>
+                        <div class="chord-notes" id="chordNotes">Select a pattern</div>
+                    </div>
+
+                    <!-- Mini Fretboard -->
+                    <div class="mini-fretboard" id="miniFretboard">
+                        <div class="mini-string" data-string="G">
+                            <span class="mini-string-label">G</span>
+                            <div class="mini-frets">
+                                <div class="mini-fret mini-nut" data-fret="0"></div>
+                                <div class="mini-fret" data-fret="1"></div>
+                                <div class="mini-fret" data-fret="2"></div>
+                                <div class="mini-fret marker" data-fret="3"></div>
+                                <div class="mini-fret" data-fret="4"></div>
+                                <div class="mini-fret marker" data-fret="5"></div>
+                                <div class="mini-fret" data-fret="6"></div>
+                            </div>
+                        </div>
+                        <div class="mini-string" data-string="D">
+                            <span class="mini-string-label">D</span>
+                            <div class="mini-frets">
+                                <div class="mini-fret mini-nut" data-fret="0"></div>
+                                <div class="mini-fret" data-fret="1"></div>
+                                <div class="mini-fret" data-fret="2"></div>
+                                <div class="mini-fret marker" data-fret="3"></div>
+                                <div class="mini-fret" data-fret="4"></div>
+                                <div class="mini-fret marker" data-fret="5"></div>
+                                <div class="mini-fret" data-fret="6"></div>
+                            </div>
+                        </div>
+                        <div class="mini-string" data-string="A">
+                            <span class="mini-string-label">A</span>
+                            <div class="mini-frets">
+                                <div class="mini-fret mini-nut" data-fret="0"></div>
+                                <div class="mini-fret" data-fret="1"></div>
+                                <div class="mini-fret" data-fret="2"></div>
+                                <div class="mini-fret marker" data-fret="3"></div>
+                                <div class="mini-fret" data-fret="4"></div>
+                                <div class="mini-fret marker" data-fret="5"></div>
+                                <div class="mini-fret" data-fret="6"></div>
+                            </div>
+                        </div>
+                        <div class="mini-string" data-string="E">
+                            <span class="mini-string-label">E</span>
+                            <div class="mini-frets">
+                                <div class="mini-fret mini-nut" data-fret="0"></div>
+                                <div class="mini-fret" data-fret="1"></div>
+                                <div class="mini-fret" data-fret="2"></div>
+                                <div class="mini-fret marker" data-fret="3"></div>
+                                <div class="mini-fret" data-fret="4"></div>
+                                <div class="mini-fret marker" data-fret="5"></div>
+                                <div class="mini-fret" data-fret="6"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="rack-footer">
+            <span class="footer-text">HARMONIC ACCOMPANIMENT</span>
+        </footer>
+    </div>
+
     <!-- BASSIST Unit -->
     <div class="rack-unit rack-bassist">
         <!-- Viti angolari -->
@@ -240,7 +404,7 @@
             <!-- View Toggles -->
             <section class="panel-section">
                 <div class="section-label">VIEW</div>
-                <div class="button-grid view-grid-4">
+                <div class="button-grid view-grid-5">
                     <button class="display-toggle" id="arpToggle" onclick="fretboard.toggleArpeggio()">
                         <span class="toggle-led"></span>
                         <span class="toggle-label">ARP</span>
@@ -256,6 +420,10 @@
                     <button class="display-toggle" id="grooveToggle" onclick="fretboard.toggleGrooveMode()">
                         <span class="toggle-led"></span>
                         <span class="toggle-label">GROOVE</span>
+                    </button>
+                    <button class="display-toggle" id="melodyToggle" onclick="fretboard.toggleMelodySync()">
+                        <span class="toggle-led"></span>
+                        <span class="toggle-label">MEL</span>
                     </button>
                 </div>
             </section>
@@ -344,6 +512,63 @@
     <script src="js/riffs.js"></script>
     <script src="js/beatgen.js"></script>
     <script src="js/fretboard.js"></script>
+
+    <!-- MELODY PATTERNS INLINE -->
+    <script>
+    console.log('Loading melody patterns inline...');
+    window.NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    const NOTES = window.NOTES;
+    const CHORD_QUALITIES = {
+        'maj': [0, 4, 7], 'min': [0, 3, 7], 'dom7': [0, 4, 7, 10], 'maj7': [0, 4, 7, 11],
+        'min7': [0, 3, 7, 10], 'dim': [0, 3, 6], 'aug': [0, 4, 8], 'sus4': [0, 5, 7], 'sus2': [0, 2, 7]
+    };
+    const SCALE_DEGREES = {
+        'I': 0, 'bII': 1, 'II': 2, 'bIII': 3, 'III': 4, 'IV': 5, '#IV': 6, 'bV': 6,
+        'V': 7, 'bVI': 8, 'VI': 9, 'bVII': 10, 'VII': 11
+    };
+    const SCALES = {
+        'major': {intervals: [0, 2, 4, 5, 7, 9, 11]},
+        'minor': {intervals: [0, 2, 3, 5, 7, 8, 10]},
+        'minor_pentatonic': {intervals: [0, 3, 5, 7, 10]}
+    };
+    window.getChordNotes = function(degree, quality, key, octave = 3) {
+        const keyIndex = NOTES.indexOf(key);
+        const degreeOffset = SCALE_DEGREES[degree] || 0;
+        const rootIndex = (keyIndex + degreeOffset) % 12;
+        const intervals = CHORD_QUALITIES[quality] || [0, 4, 7];
+        return intervals.map(interval => {
+            const noteIndex = (rootIndex + interval) % 12;
+            const noteOctave = octave + Math.floor((rootIndex + interval) / 12);
+            return NOTES[noteIndex] + noteOctave;
+        });
+    }
+    window.getMelodyNote = function(degree, key, octave = 4, scale = 'major') {
+        const keyIndex = NOTES.indexOf(key);
+        const scaleIntervals = SCALES[scale]?.intervals || [0, 2, 4, 5, 7, 9, 11];
+        const degreeIndex = (degree - 1) % scaleIntervals.length;
+        const interval = scaleIntervals[degreeIndex];
+        const noteIndex = (keyIndex + interval) % 12;
+        const noteOctave = octave + Math.floor((keyIndex + interval) / 12);
+        return NOTES[noteIndex] + noteOctave;
+    }
+    window.CHORD_PROGRESSIONS = [
+        {id: 'rock-i-iv-v', name: 'I-IV-V (Rock)', type: 'chords', genre: 'rock', key: 'C', bars: 4,
+         steps: [{degree: 'I', quality: 'maj', beat: 0, duration: 4}, {degree: 'IV', quality: 'maj', beat: 0, duration: 4}, {degree: 'V', quality: 'maj', beat: 0, duration: 2}, {degree: 'IV', quality: 'maj', beat: 2, duration: 2}, {degree: 'I', quality: 'maj', beat: 0, duration: 4}]},
+        {id: 'rock-power', name: 'I-V (Power)', type: 'chords', genre: 'rock', key: 'C', bars: 1,
+         steps: [{degree: 'I', quality: 'maj', beat: 0, duration: 2}, {degree: 'V', quality: 'maj', beat: 2, duration: 2}]},
+        {id: 'blues-turnaround', name: 'Blues Turnaround', type: 'chords', genre: 'blues', key: 'C', bars: 1,
+         steps: [{degree: 'I', quality: 'dom7', beat: 0, duration: 1}, {degree: 'VI', quality: 'dom7', beat: 1, duration: 1}, {degree: 'II', quality: 'min7', beat: 2, duration: 1}, {degree: 'V', quality: 'dom7', beat: 3, duration: 1}]},
+        {id: 'funk-vamp', name: 'i-i (Funk Vamp)', type: 'chords', genre: 'funk', key: 'C', bars: 1,
+         steps: [{degree: 'I', quality: 'min7', beat: 0, duration: 4}]}
+    ];
+    window.MELODIC_LINES = [
+        {id: 'major-run', name: 'Major Scale Run', type: 'melody', genre: 'foundation', key: 'C', bars: 1, scale: 'major',
+         steps: [{degree: 1, octave: 4, beat: 0, duration: '8n'}, {degree: 2, octave: 4, beat: 0.5, duration: '8n'}, {degree: 3, octave: 4, beat: 1, duration: '8n'}, {degree: 4, octave: 4, beat: 1.5, duration: '8n'}, {degree: 5, octave: 4, beat: 2, duration: '8n'}, {degree: 6, octave: 4, beat: 2.5, duration: '8n'}, {degree: 7, octave: 4, beat: 3, duration: '8n'}, {degree: 1, octave: 5, beat: 3.5, duration: '8n'}]}
+    ];
+    console.log('Patterns loaded:', window.CHORD_PROGRESSIONS.length, 'chords,', window.MELODIC_LINES.length, 'melodies');
+    </script>
+
+    <script src="js/melody-gen.js?v=5"></script>
     <script src="js/app.js"></script>
 </body>
 </html>
