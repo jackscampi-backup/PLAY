@@ -35,6 +35,7 @@ const SCALE_DEGREES = {
     'bVII': 10,
     'VII': 11
 };
+window.SCALE_DEGREES = SCALE_DEGREES;  // Export for other modules
 
 // Scale intervals (for melodic lines)
 const SCALES = {

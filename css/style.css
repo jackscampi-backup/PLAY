@@ -916,6 +916,147 @@ body {
     letter-spacing: 3px;
 }
 
+/* Bar indicator LEDs */
+.bar-indicator {
+    display: flex;
+    gap: 5px;
+    justify-content: center;
+    margin-top: 10px;
+    flex-wrap: wrap;
+    max-width: 180px;
+}
+
+.bar-led {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #333;
+    border: 1px solid #555;
+    transition: all 0.1s ease;
+}
+
+.bar-led.active {
+    background: var(--led-green);
+    box-shadow: 0 0 6px var(--led-green), 0 0 12px var(--led-green);
+}
+
+/* MEL Mode Chord Strip in BASS rack */
+.mel-chord-section {
+    margin-bottom: 10px;
+}
+
+/* Chord Strip - progression at a glance */
+.chord-strip {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    align-items: center;
+    padding: 10px 15px;
+    background: #0a0a0a;
+    border-radius: 6px;
+    min-height: 50px;
+}
+
+.chord-strip-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 16px;
+    background: #1a1a1a;
+    border: 2px solid #333;
+    border-radius: 6px;
+    min-width: 60px;
+    transition: all 0.15s ease;
+}
+
+.chord-strip-item .chord-root {
+    font-family: 'Oswald', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #666;
+}
+
+.chord-strip-item .chord-quality {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem;
+    color: #555;
+    margin-top: 2px;
+}
+
+.chord-strip-item.current {
+    background: #1a1a0a;
+    border-color: var(--display-orange);
+    box-shadow: 0 0 15px rgba(255, 102, 0, 0.4);
+}
+
+.chord-strip-item.current .chord-root {
+    color: var(--display-orange);
+    text-shadow: 0 0 10px var(--display-glow);
+}
+
+.chord-strip-item.current .chord-quality {
+    color: var(--display-orange);
+}
+
+.chord-strip-item.next {
+    border-color: #555;
+}
+
+.chord-strip-item.next .chord-root {
+    color: #888;
+}
+
+.chord-strip-arrow {
+    color: #444;
+    font-size: 1.2rem;
+    margin: 0 2px;
+}
+
+/* Melody bottom section - Beat indicator + Octave control */
+.melody-bottom-section {
+    margin-top: 10px;
+}
+
+.melody-bottom-layout {
+    display: flex;
+    gap: 15px;
+    align-items: stretch;
+}
+
+/* Melody pattern section - same styling as DRUMMER/BASS pattern sections */
+.melody-pattern-section {
+    flex: 1;
+    background: var(--panel-surface);
+    border-radius: 6px;
+    padding: 15px 0;
+    border: 1px solid #252525;
+}
+
+.melody-control-box {
+    flex: 0 0 auto;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 4px;
+    padding: 8px 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.melody-octave-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.octave-display {
+    font-family: 'DSEG7Classic', 'Share Tech Mono', monospace;
+    font-size: 1.5rem;
+    color: var(--display-orange);
+    min-width: 30px;
+    text-align: center;
+}
+
 /* Melody display row - display + mini fretboard side by side */
 .melody-display-row {
     display: flex;
@@ -1320,7 +1461,7 @@ body {
     padding: 10px 6px;
     border: none;
     background: linear-gradient(180deg, #3a3a3a 0%, #252525 50%, #1a1a1a 100%);
-    color: #888;
+    color: var(--display-orange);
     border-radius: 4px;
     cursor: pointer;
     font-family: 'Oswald', sans-serif;
@@ -1338,7 +1479,7 @@ body {
 .root-btn:hover,
 .scale-btn:hover {
     background: linear-gradient(180deg, #454545 0%, #303030 50%, #252525 100%);
-    color: #aaa;
+    color: #ffaa44;
 }
 
 .root-btn:active,
@@ -1526,10 +1667,12 @@ body {
     filter: brightness(1.4);
 }
 
-/* Currently playing note - pulsing highlight */
+/* Currently playing note - orange with pulsing highlight */
 .note.playing {
+    background: var(--display-orange);
+    color: #000;
     transform: scale(1.3);
-    filter: brightness(1.5);
+    filter: brightness(1.2);
     box-shadow:
         0 0 20px rgba(255, 255, 255, 0.8),
         0 0 40px rgba(255, 140, 0, 0.6);
@@ -1919,6 +2062,199 @@ body {
 
 .lesson-display::-webkit-scrollbar-thumb:hover {
     background: #444;
+}
+
+/* Melody Timeline */
+.melody-timeline {
+    display: flex;
+    gap: 4px;
+    padding: 10px;
+    background: #0a0a0a;
+    border-radius: 4px;
+    border: 1px solid #333;
+    overflow-x: auto;
+    min-height: 50px;
+    align-items: center;
+}
+
+.melody-timeline::-webkit-scrollbar {
+    height: 6px;
+}
+
+.melody-timeline::-webkit-scrollbar-track {
+    background: #000;
+}
+
+.melody-timeline::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 3px;
+}
+
+.timeline-note {
+    flex-shrink: 0;
+    min-width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 4px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.75rem;
+    color: #666;
+    transition: all 0.1s ease;
+}
+
+.timeline-note.current {
+    background: var(--display-orange);
+    color: #000;
+    font-weight: bold;
+    border-color: #ffaa00;
+    box-shadow: 0 0 10px var(--display-glow);
+    transform: scale(1.1);
+}
+
+.timeline-note.played {
+    background: #2a2a2a;
+    color: #444;
+    border-color: #222;
+}
+
+.timeline-note.next {
+    background: #252520;
+    color: var(--display-orange);
+    border-color: #444;
+}
+
+.timeline-note.timeline-rest {
+    background: #111;
+    color: #333;
+    border-color: #222;
+    min-width: 20px;
+}
+
+.timeline-note.timeline-rest.current {
+    background: #222;
+    color: #555;
+    border-color: #444;
+    box-shadow: none;
+    transform: none;
+}
+
+.timeline-bar-marker {
+    flex-shrink: 0;
+    width: 2px;
+    height: 40px;
+    background: #444;
+    margin: 0 4px;
+}
+
+/* NEXT button for melody mode */
+.melody-next-btn {
+    background: linear-gradient(180deg, #4a3a2a 0%, #352a1a 50%, #2a1f15 100%);
+    border-color: #5a4a3a;
+}
+
+.melody-next-btn:hover {
+    background: linear-gradient(180deg, #5a4a3a 0%, #453525 50%, #352a1a 100%);
+}
+
+.melody-next-btn .toggle-label {
+    color: #ff9933;
+}
+
+.melody-next-btn.active .toggle-led {
+    background: var(--display-orange);
+    box-shadow:
+        0 0 8px var(--display-orange),
+        0 0 16px rgba(255,102,0,0.4);
+}
+
+/* Action buttons container */
+.melody-action-btns {
+    display: flex;
+    gap: 6px;
+}
+
+/* SAVE button */
+.melody-save-btn {
+    background: linear-gradient(180deg, #2a4a3a 0%, #1a352a 50%, #152a20 100%);
+    border-color: #3a5a4a;
+}
+
+.melody-save-btn:hover {
+    background: linear-gradient(180deg, #3a5a4a 0%, #254535 50%, #1a352a 100%);
+}
+
+.melody-save-btn .toggle-label {
+    color: #66cc99;
+}
+
+.melody-save-btn.active .toggle-led {
+    background: #66cc99;
+    box-shadow:
+        0 0 8px #66cc99,
+        0 0 16px rgba(102,204,153,0.4);
+}
+
+/* Saved melodies list */
+.saved-melodies-list {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.saved-melody-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.1s ease;
+}
+
+.saved-melody-item:hover {
+    background: #252525;
+    border-color: #444;
+}
+
+.saved-melody-item.active {
+    background: #2a2520;
+    border-color: var(--display-orange);
+}
+
+.saved-melody-name {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.75rem;
+    color: #888;
+}
+
+.saved-melody-item.active .saved-melody-name {
+    color: var(--display-orange);
+}
+
+.saved-melody-delete {
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #333;
+    border: none;
+    border-radius: 50%;
+    color: #666;
+    font-size: 0.7rem;
+    cursor: pointer;
+    transition: all 0.1s ease;
+}
+
+.saved-melody-delete:hover {
+    background: #ff4444;
+    color: #fff;
 }
 
 /* ===== CORSO RESPONSIVE ===== */

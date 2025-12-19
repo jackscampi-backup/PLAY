@@ -16,6 +16,10 @@ class Fretboard {
         this.melodySyncActive = false;  // Toggle controlled by user
         this.showMelodyMode = false;
         this.melodyChordNotes = null;
+        this.melodyChordPositions = null;  // Specific positions to highlight
+        this.isPlayingMelody = false;  // Playing along with melody
+        this.melodySequence = null;    // Tone.js sequence for melody sync
+        this.currentMelodyChordRoot = null;  // Current chord root from MELODY (for groove sync)
 
         // Autoplay state
         this.isPlaying = false;
@@ -47,6 +51,18 @@ class Fretboard {
         const rootIndex = NOTES.indexOf(this.rootNote);
         const eIndex = NOTES.indexOf('E');
         return (rootIndex - eIndex + 12) % 12;
+    }
+
+    // Get dynamic root offset (follows MELODY chord if MEL mode active)
+    getDynamicRootOffset() {
+        // If MEL mode active and we have a chord root from MELODY, use that
+        if (this.melodySyncActive && this.currentMelodyChordRoot) {
+            const rootIndex = NOTES.indexOf(this.currentMelodyChordRoot);
+            const eIndex = NOTES.indexOf('E');
+            return (rootIndex - eIndex + 12) % 12;
+        }
+        // Otherwise use the selected ROOT
+        return this.getRootOffset();
     }
 
     // Transpose a groove step by semitones
@@ -354,13 +370,18 @@ class Fretboard {
         container.appendChild(markersRow);
     }
 
-    selectRoot(note) {
+    selectRoot(note, fromMelody = false) {
         this.rootNote = note;
 
-        // Update button states
-        document.querySelectorAll('.root-btn').forEach(btn => {
+        // Update button states (only BASS root buttons, not MELODY key buttons)
+        document.querySelectorAll('#rootButtons .root-btn').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.note === note);
         });
+
+        // Sync with MELODY key (avoid infinite loop)
+        if (!fromMelody && window.melodyGen) {
+            window.melodyGen.selectKey(note, true);
+        }
 
         // Clear fretboard highlights before updating
         this.clearPlayingHighlights();
@@ -420,11 +441,11 @@ class Fretboard {
     updateDisplay() {
         // Get notes to display based on mode
         let scaleNotes = [];
-        let isMelodyMode = this.showMelodyMode && this.melodyChordNotes;
+        let isMelodyMode = this.showMelodyMode && this.melodyChordPositions;
 
         if (isMelodyMode) {
-            // Use melody chord notes
-            scaleNotes = this.melodyChordNotes;
+            // Melody mode uses specific positions, not all note occurrences
+            scaleNotes = this.melodyChordNotes || [];
         } else if (this.currentScale) {
             // Use scale/arpeggio notes
             scaleNotes = this.showArpeggio
@@ -435,18 +456,34 @@ class Fretboard {
         document.querySelectorAll('.note').forEach(noteDiv => {
             const note = noteDiv.dataset.note;
             const fret = parseInt(noteDiv.dataset.fret);
+            const string = noteDiv.dataset.string;
             const inShape = this.isInShape(fret);
 
             // Reset classes
             noteDiv.classList.remove('in-scale', 'root', 'out-of-shape', 'in-arpeggio', 'melody-chord');
 
             // If no notes to show, just display note name
-            if (scaleNotes.length === 0) {
+            if (scaleNotes.length === 0 && !isMelodyMode) {
                 noteDiv.textContent = this.getDisplayNote(note);
                 return;
             }
 
-            // Check if note is root or in chord/scale
+            // MELODY MODE: Only highlight specific positions
+            if (isMelodyMode && this.melodyChordPositions) {
+                const pos = this.melodyChordPositions.find(p =>
+                    p.string === string && p.fret === fret
+                );
+
+                if (pos) {
+                    noteDiv.classList.add(pos.isRoot ? 'root' : 'in-arpeggio');
+                    noteDiv.textContent = this.getDisplayNote(note);
+                } else {
+                    noteDiv.textContent = this.getDisplayNote(note);
+                }
+                return;
+            }
+
+            // SCALE/ARPEGGIO MODE: Check if note is root or in chord/scale
             const isNoteRoot = isRoot(note, this.rootNote);
             const isNoteInScale = scaleNotes.includes(note);
 
@@ -481,12 +518,9 @@ class Fretboard {
             }
         });
 
-        // Update root buttons
-        document.querySelectorAll('.root-btn').forEach(btn => {
-            const note = btn.dataset.note;
-            if (note) {
-                btn.textContent = this.getDisplayNote(note);
-            }
+        // Update root buttons (only BASS, not MELODY)
+        document.querySelectorAll('#rootButtons .root-btn').forEach(btn => {
+            btn.textContent = this.getDisplayNote(btn.dataset.note);
         });
 
         // Update toggle button state (LED on = intervals, LED off = notes)
@@ -690,6 +724,16 @@ class Fretboard {
             await bassSound.init();
         }
 
+        // If MEL mode is active, play root notes as guide
+        if (this.melodySyncActive) {
+            if (this.isPlayingMelody) {
+                this.stopMelodyPlay();
+            } else {
+                this.startMelodyPlay();
+            }
+            return;
+        }
+
         // If groove mode active and a groove is selected, play groove
         if (this.grooveModeActive && this.currentGroove) {
             if (this.isPlayingGroove) {
@@ -711,39 +755,25 @@ class Fretboard {
         console.log('BASSIST: startPlay() called');
 
         const scaleNotes = this.buildScaleNotes();
-        console.log('BASSIST: scaleNotes =', scaleNotes);
         if (scaleNotes.length === 0) {
-            console.warn('BASSIST: No scale notes to play!');
-            alert('Select a Scale or Groove first!');
+            console.warn('BASSIST: No scale notes to play - select a scale or groove first');
             return;
         }
 
         // Get current DRUMMER pattern for kick sync
-        console.log('BASSIST: window.beatGen =', window.beatGen);
-        console.log('BASSIST: typeof window.beatGen =', typeof window.beatGen);
-        if (window.beatGen) {
-            console.log('BASSIST: beatGen.currentPattern =', window.beatGen.currentPattern);
-            console.log('BASSIST: beatGen keys =', Object.keys(window.beatGen));
-        }
-
         if (!window.beatGen) {
-            console.warn('BASSIST: beatGen not found on window');
-            alert('Errore: beatGen non trovato!');
+            console.warn('BASSIST: beatGen not found');
             return;
         }
 
         if (!window.beatGen.currentPattern) {
             console.warn('BASSIST: No DRUMMER pattern selected');
-            alert('Seleziona un pattern in DRUMMER prima!\n(currentPattern = ' + window.beatGen.currentPattern + ')');
             return;
         }
 
         const pattern = PATTERNS[window.beatGen.currentPattern];
-        console.log('BASSIST: pattern =', pattern);
-
         if (!pattern || !pattern.kick) {
             console.warn('BASSIST: Pattern has no kick array');
-            alert('Pattern senza kick!');
             return;
         }
 
@@ -1010,7 +1040,7 @@ class Fretboard {
      */
     startGroovePlay() {
         if (!this.currentGroove) {
-            alert('Select a groove first!');
+            console.warn('BASSIST: No groove selected');
             return;
         }
 
@@ -1029,19 +1059,25 @@ class Fretboard {
             console.log('BASSIST: Using groove BPM:', this.currentGroove.bpm);
         }
 
-        // Get transposed steps based on current root
-        const steps = this.getTransposedGrooveSteps();
-        const totalSteps = steps.length;
+        // Get original groove steps (we'll transpose dynamically)
+        const originalSteps = this.currentGroove.steps;
+        const totalSteps = originalSteps.length;
 
         this.grooveSequence = new Tone.Sequence(
             (time, stepIndex) => {
-                const step = steps[stepIndex];
-                if (step) {
-                    bassSound.play(null, step.s, step.f, '16n');
-                    Tone.Draw.schedule(() => {
-                        this.highlightGrooveNote(step);
-                        this.highlightGrooveStep(stepIndex);
-                    }, time);
+                const originalStep = originalSteps[stepIndex];
+                if (originalStep) {
+                    // Dynamic transposition: follows MELODY chord if MEL mode active
+                    const offset = this.getDynamicRootOffset();
+                    const step = this.transposeStep(originalStep, offset);
+
+                    if (step) {
+                        bassSound.play(null, step.s, step.f, '16n');
+                        Tone.Draw.schedule(() => {
+                            this.highlightGrooveNote(step);
+                            this.highlightGrooveStep(stepIndex);
+                        }, time);
+                    }
                 } else {
                     Tone.Draw.schedule(() => {
                         this.highlightGrooveNote(null);
@@ -1060,6 +1096,12 @@ class Fretboard {
         if (window.beatGen && window.beatGen.currentPattern && !window.beatGen.isPlaying) {
             window.beatGen.play();
             console.log('BASSIST: Started DRUMMER');
+        }
+
+        // Also start MELODY if MEL mode is active and pattern selected
+        if (this.melodySyncActive && window.melodyGen?.currentPattern && !window.melodyGen.isPlaying) {
+            window.melodyGen.play();
+            console.log('BASSIST: Started MELODY');
         }
 
         if (Tone.Transport.state !== 'started') {
@@ -1176,25 +1218,97 @@ class Fretboard {
      * @param {string[]} chordNotes - Array of note names without octave (e.g., ['E', 'G#', 'B'])
      */
     showMelodyChord(root, chordNotes) {
-        // Only show if melody sync is active
+        // Always track current melody chord root (for groove transposition)
+        this.currentMelodyChordRoot = root;
+
+        // Only update UI if melody sync is active
         if (!this.melodySyncActive) return;
 
-        console.log('BASS: showMelodyChord', root, chordNotes);
-
-        // Update root note
+        // Update root note for UI
         this.rootNote = root;
 
-        // Store chord notes for rendering
-        this.melodyChordNotes = chordNotes;
-        this.showMelodyMode = true;
-
-        // Update root buttons UI
-        document.querySelectorAll('.root-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.root === root);
+        // Update BASS root buttons UI (not MELODY key buttons)
+        document.querySelectorAll('#rootButtons .root-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.note === root);
         });
 
-        // Update display to show chord notes
+        // Clear chord display (notes shown on MELODY mini-fretboard, not here)
+        this.melodyChordNotes = null;
+        this.melodyChordPositions = null;
+        this.showMelodyMode = false;
         this.updateDisplay();
+    }
+
+    /**
+     * Play the chord root note on bass
+     */
+    async playChordRoot(root) {
+        // Initialize sound if needed
+        if (!bassSound.isReady) {
+            await bassSound.init();
+        }
+
+        const bassNote = this.findNoteOnBass(root);
+        if (bassNote) {
+            bassSound.play(null, bassNote.string, bassNote.fret, '2n');
+            this.highlightPlayingNote(bassNote);
+            console.log('BASS: Playing root', root, 'at', bassNote.string, bassNote.fret);
+        }
+    }
+
+    /**
+     * Find best positions for chord notes (one per note, practical voicing)
+     */
+    findChordPositions(root, chordNotes) {
+        const positions = [];
+        const strings = ['E', 'A', 'D', 'G'];
+        const stringPitches = { 'E': ['E','F','F#','G','G#','A','A#','B','C','C#','D','D#','E'],
+                                'A': ['A','A#','B','C','C#','D','D#','E','F','F#','G','G#','A'],
+                                'D': ['D','D#','E','F','F#','G','G#','A','A#','B','C','C#','D'],
+                                'G': ['G','G#','A','A#','B','C','C#','D','D#','E','F','F#','G'] };
+
+        // Find root position first (prefer E or A string, low frets)
+        const rootPos = this.findNoteOnBass(root);
+        if (rootPos) {
+            positions.push({ string: rootPos.string, fret: rootPos.fret, note: root, isRoot: true });
+        }
+
+        // Find other chord notes close to root position
+        const rootFret = rootPos?.fret || 0;
+
+        chordNotes.forEach(note => {
+            if (note === root) return; // Already added root
+
+            let bestPos = null;
+            let bestDistance = Infinity;
+
+            // Search all strings for this note
+            strings.forEach(string => {
+                const frets = stringPitches[string];
+                for (let fret = 0; fret <= 12; fret++) {
+                    if (frets[fret] === note || frets[fret] === this.normalizeNote(note)) {
+                        const distance = Math.abs(fret - rootFret);
+                        if (distance < bestDistance) {
+                            bestDistance = distance;
+                            bestPos = { string, fret, note, isRoot: false };
+                        }
+                    }
+                }
+            });
+
+            if (bestPos) {
+                positions.push(bestPos);
+            }
+        });
+
+        console.log('BASS: Chord positions:', positions);
+        return positions;
+    }
+
+    normalizeNote(note) {
+        // Handle enharmonic equivalents
+        const enharmonics = { 'Db': 'C#', 'Eb': 'D#', 'Gb': 'F#', 'Ab': 'G#', 'Bb': 'A#' };
+        return enharmonics[note] || note;
     }
 
     /**
@@ -1202,6 +1316,7 @@ class Fretboard {
      */
     clearMelodyChord() {
         this.melodyChordNotes = null;
+        this.melodyChordPositions = null;
         this.showMelodyMode = false;
         if (this.melodySyncActive) {
             this.updateDisplay();
@@ -1220,14 +1335,212 @@ class Fretboard {
             melodyToggle.classList.toggle('active', this.melodySyncActive);
         }
 
-        // Clear melody display if turning off
-        if (!this.melodySyncActive) {
+        // Show/hide MEL chord strip section
+        const melChordSection = document.getElementById('melChordSection');
+        if (melChordSection) {
+            melChordSection.style.display = this.melodySyncActive ? 'block' : 'none';
+        }
+
+        // Build or clear the BASS chord strip
+        if (this.melodySyncActive) {
+            this.buildBassChordStrip();
+        } else {
+            // If turning off, stop melody play and clear
+            if (this.isPlayingMelody) {
+                this.stopMelodyPlay();
+            }
             this.showMelodyMode = false;
             this.melodyChordNotes = null;
+            this.melodyChordPositions = null;
+            this.clearBassChordStrip();
         }
 
         this.updateDisplay();
         console.log('BASS: Melody sync', this.melodySyncActive ? 'ON' : 'OFF');
+    }
+
+    /**
+     * Build BASS chord strip (same style as MELODY)
+     */
+    buildBassChordStrip() {
+        const strip = document.getElementById('bassChordStrip');
+        if (!strip) return;
+
+        // Get pattern from MELODY
+        if (!window.melodyGen || !window.melodyGen.currentPattern) {
+            strip.innerHTML = '<span style="color: #555;">Seleziona pattern in MELODY</span>';
+            return;
+        }
+
+        const pattern = window.CHORD_PROGRESSIONS_MELODY?.find(p => p.id === window.melodyGen.currentPattern);
+        if (!pattern || !pattern.steps) {
+            strip.innerHTML = '<span style="color: #555;">Pattern non trovato</span>';
+            return;
+        }
+
+        strip.innerHTML = '';
+
+        const melodyGen = window.melodyGen;
+        const currentKey = melodyGen.currentKey;
+
+        pattern.steps.forEach((chord, index) => {
+            // Calculate chord root note
+            const keyIndex = window.MELODY_NOTES.indexOf(currentKey);
+            const degreeOffset = window.SCALE_DEGREES[chord.degree] || 0;
+            const rootIndex = (keyIndex + degreeOffset) % 12;
+            const rootNote = window.MELODY_NOTES[rootIndex];
+
+            // Create chord item
+            const item = document.createElement('div');
+            item.className = 'chord-strip-item';
+            item.dataset.index = index;
+
+            const rootDiv = document.createElement('div');
+            rootDiv.className = 'chord-root';
+            rootDiv.textContent = melodyGen.toDisplayNote(rootNote);
+
+            const qualityDiv = document.createElement('div');
+            qualityDiv.className = 'chord-quality';
+            qualityDiv.textContent = chord.quality === 'maj' ? '' : chord.quality;
+
+            item.appendChild(rootDiv);
+            item.appendChild(qualityDiv);
+            strip.appendChild(item);
+
+            // Add arrow between chords (except last)
+            if (index < pattern.steps.length - 1) {
+                const arrow = document.createElement('span');
+                arrow.className = 'chord-strip-arrow';
+                arrow.textContent = '→';
+                strip.appendChild(arrow);
+            }
+        });
+    }
+
+    /**
+     * Update BASS chord strip position (highlight current chord)
+     */
+    updateBassChordStripPosition(currentIndex) {
+        const strip = document.getElementById('bassChordStrip');
+        if (!strip) return;
+
+        const items = strip.querySelectorAll('.chord-strip-item');
+        items.forEach((item, index) => {
+            item.classList.remove('current', 'next');
+            if (index === currentIndex) {
+                item.classList.add('current');
+            } else if (index === currentIndex + 1 || (currentIndex === items.length - 1 && index === 0)) {
+                item.classList.add('next');
+            }
+        });
+    }
+
+    /**
+     * Clear BASS chord strip highlighting
+     */
+    clearBassChordStrip() {
+        const strip = document.getElementById('bassChordStrip');
+        if (strip) {
+            strip.querySelectorAll('.chord-strip-item').forEach(item => {
+                item.classList.remove('current', 'next');
+            });
+        }
+    }
+
+    /**
+     * Start playing bass along with melody - plays ROOT note when chords change
+     */
+    async startMelodyPlay() {
+        // Check if melody generator exists
+        if (!window.melodyGen) {
+            console.warn('BASSIST: MELODY module not found');
+            return;
+        }
+
+        // Check if pattern is selected
+        if (!window.melodyGen.currentPattern) {
+            console.warn('BASSIST: No MELODY pattern selected');
+            return;
+        }
+
+        // Initialize bass sound
+        if (!bassSound.isReady) {
+            await bassSound.init();
+        }
+
+        // Set flag BEFORE starting melody so first chord triggers bass
+        this.isPlayingMelody = true;
+
+        // Update button state
+        const btn = document.getElementById('scalePlayBtn');
+        if (btn) btn.classList.add('active');
+
+        // Start MELODY if not already playing
+        if (!window.melodyGen.isPlaying) {
+            console.log('BASS: Starting MELODY');
+            window.melodyGen.play();
+        }
+
+        // Bass notes are triggered by melody-gen when chords change
+        console.log('BASS: MEL mode active - bass will play roots on chord changes');
+    }
+
+    /**
+     * Stop playing bass along with melody
+     */
+    stopMelodyPlay() {
+        if (this.melodySequence) {
+            this.melodySequence.stop();
+            this.melodySequence.dispose();
+            this.melodySequence = null;
+        }
+
+        this.isPlayingMelody = false;
+
+        // Update button state
+        const btn = document.getElementById('scalePlayBtn');
+        if (btn) btn.classList.remove('active');
+
+        // Clear highlighting
+        this.clearPlayingHighlight();
+
+        console.log('BASS: Stopped melody sync play');
+    }
+
+    /**
+     * Find best position for a note on the bass
+     */
+    findNoteOnBass(noteName) {
+        const strings = {
+            'E': ['E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B', 'C', 'C#', 'D', 'D#'],
+            'A': ['A', 'A#', 'B', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#'],
+            'D': ['D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B', 'C', 'C#'],
+            'G': ['G', 'G#', 'A', 'A#', 'B', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#']
+        };
+        const stringOrder = ['E', 'A', 'D', 'G'];
+
+        // Find the lowest fret position
+        let bestPosition = null;
+
+        for (const stringName of stringOrder) {
+            const fretIndex = strings[stringName].indexOf(noteName);
+            if (fretIndex !== -1 && fretIndex <= 12) {
+                if (!bestPosition || fretIndex < bestPosition.fret) {
+                    bestPosition = { string: stringName, fret: fretIndex };
+                }
+            }
+        }
+
+        return bestPosition;
+    }
+
+    /**
+     * Clear playing note highlight
+     */
+    clearPlayingHighlight() {
+        document.querySelectorAll('.fret-note.playing').forEach(el => {
+            el.classList.remove('playing');
+        });
     }
 }
 

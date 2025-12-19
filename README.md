@@ -115,10 +115,17 @@ Accompagnamento armonico per praticare improvvisazione e groove.
 | **Trip-Hop** | Dark | i7 - bVII |
 | **Trip-Hop** | Moody | i7 - iv7 |
 
+**Chord Strip:**
+- Visualizza la progressione completa in formato boxes (es. E → A → B → E)
+- L'accordo corrente si illumina in arancione durante la riproduzione
+- Supporta notazione ITA (Do, Re, Mi)
+
 **Sync con BASSIST:**
 - Attiva **MEL** nel menu VIEW del BASSIST
 - Il fretboard grande mostra le note dell'accordo corrente
 - Quando cambia accordo, il fretboard si aggiorna automaticamente
+- **Chord strip sincronizzata**: BASS mostra la stessa progressione di MELODY
+- **KEY ↔ ROOT sync**: Cambiando KEY in MELODY, si aggiorna ROOT in BASS (e viceversa)
 
 ### Modulo BASSIST
 
@@ -185,6 +192,7 @@ Visualizzatore interattivo per tastiera basso 4 corde (12 tasti).
 - **Trasposizione automatica**: I groove si adattano alla ROOT selezionata!
 - **Auto-restart**: Cambiando ROOT durante il playback, il groove riparte trasposto
 - **Pattern Display**: Griglia LED identica a DRUMMER che mostra le note del groove
+- **Groove segue MELODY**: Con MEL attivo, il groove traspone automaticamente seguendo gli accordi!
 
 **Sync DRUMMER ↔ BASSIST:**
 - Selezionando un groove, DRUMMER si imposta automaticamente sul pattern drum abbinato
@@ -239,6 +247,19 @@ Pattern da metronomo per esercizi tecnici:
 7. Le note del groove si illuminano sulla tastiera
 8. Suona insieme sul basso seguendo le note!
 9. Cambia BPM nel pannello AUDIO per rallentare/accelerare
+
+### Come Usare GROOVE + MELODY (nuovo!)
+
+Per far seguire al groove gli accordi di una progressione:
+
+1. **MELODY**: Seleziona CHORDS mode e scegli un pattern (es. Classic I-IV-V)
+2. **BASS**: Attiva **GROOVE** e seleziona un groove
+3. **BASS**: Attiva **MEL** (LED verde)
+4. Premi **ON** nel BASS → parte tutto sincronizzato!
+5. Il groove traspone automaticamente seguendo ogni accordo
+6. La **chord strip** mostra la progressione con l'accordo corrente illuminato
+
+Esempio: Con progressione E-A-B-E, il groove suonera' in E, poi si trasporta in A, poi B, poi torna in E!
 
 **Abbinamenti Groove → Drum Pattern:**
 | Groove | Drum Pattern |

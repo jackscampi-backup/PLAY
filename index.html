@@ -241,7 +241,7 @@
                 </div>
             </section>
 
-            <!-- Row 2: MODE + PATTERN dropdown -->
+            <!-- Row 2: MODE + PATTERN dropdown + NEXT -->
             <section class="panel-section melody-row">
                 <div class="melody-control-group">
                     <div class="section-label">MODE</div>
@@ -262,9 +262,30 @@
                         <option value="">-- Select --</option>
                     </select>
                 </div>
+                <div class="melody-control-group">
+                    <div class="section-label">&nbsp;</div>
+                    <div class="melody-action-btns">
+                        <button class="display-toggle melody-next-btn" id="melodyNextBtn">
+                            <span class="toggle-led"></span>
+                            <span class="toggle-label">NEXT</span>
+                        </button>
+                        <button class="display-toggle melody-save-btn" id="melodySaveBtn">
+                            <span class="toggle-led"></span>
+                            <span class="toggle-label">SAVE</span>
+                        </button>
+                    </div>
+                </div>
             </section>
 
-            <!-- Row 3: SOUND + OCTAVE + VOLUME -->
+            <!-- Saved Melodies (hidden until there are saved melodies) -->
+            <section class="panel-section" id="savedMelodiesSection" style="display: none;">
+                <div class="section-label">SAVED</div>
+                <div class="saved-melodies-list" id="savedMelodiesList">
+                    <!-- Populated dynamically -->
+                </div>
+            </section>
+
+            <!-- Row 3: SOUND + VOLUME -->
             <section class="panel-section melody-row">
                 <div class="melody-control-group">
                     <div class="section-label">SOUND</div>
@@ -273,21 +294,27 @@
                         <option value="organ">ORGAN</option>
                     </select>
                 </div>
-                <div class="melody-control-group">
-                    <div class="section-label">OCTAVE</div>
-                    <div class="melody-octave-control">
-                        <button class="bpm-btn" id="melodyOctMinus">-</button>
-                        <span class="octave-display" id="melodyOctDisplay">3</span>
-                        <button class="bpm-btn" id="melodyOctPlus">+</button>
-                    </div>
-                </div>
                 <div class="melody-control-group melody-vol-group">
                     <div class="section-label">VOL</div>
                     <input type="range" class="audio-slider" id="melodyVolume" min="0" max="100" value="70">
                 </div>
             </section>
 
-            <!-- Row 4: Display + Mini Fretboard -->
+            <!-- Row 4: Melody Timeline (only visible in melody mode) -->
+            <section class="panel-section" id="melodyTimelineSection" style="display: none;">
+                <div class="melody-timeline" id="melodyTimeline">
+                    <!-- Populated dynamically with note boxes -->
+                </div>
+            </section>
+
+            <!-- Row 5: Chord Strip (progression at a glance) -->
+            <section class="panel-section">
+                <div class="chord-strip" id="chordStrip">
+                    <!-- Populated by JS: shows all chords in progression -->
+                </div>
+            </section>
+
+            <!-- Row 6: Display + Mini Fretboard -->
             <section class="panel-section">
                 <div class="melody-display-row">
                     <!-- Chord Display -->
@@ -345,6 +372,56 @@
                                 <div class="mini-fret marker" data-fret="5"></div>
                                 <div class="mini-fret" data-fret="6"></div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Row 6: Beat Indicator + Octave Control (same as DRUMMER/BASS) -->
+            <section class="panel-section melody-bottom-section">
+                <div class="melody-bottom-layout">
+                    <!-- Beat Pattern Grid (same structure as DRUMMER) -->
+                    <div class="melody-pattern-section" id="melodyPatternSection">
+                        <div class="pattern-grid">
+                            <!-- Beat Counter Row -->
+                            <div class="beat-row">
+                                <div class="beat-group">
+                                    <span class="beat-num" data-beat="1">1</span>
+                                    <span class="beat-dot">·</span>
+                                    <span class="beat-dot">·</span>
+                                    <span class="beat-dot">·</span>
+                                </div>
+                                <div class="beat-group">
+                                    <span class="beat-num" data-beat="2">2</span>
+                                    <span class="beat-dot">·</span>
+                                    <span class="beat-dot">·</span>
+                                    <span class="beat-dot">·</span>
+                                </div>
+                                <div class="beat-group">
+                                    <span class="beat-num" data-beat="3">3</span>
+                                    <span class="beat-dot">·</span>
+                                    <span class="beat-dot">·</span>
+                                    <span class="beat-dot">·</span>
+                                </div>
+                                <div class="beat-group">
+                                    <span class="beat-num" data-beat="4">4</span>
+                                    <span class="beat-dot">·</span>
+                                    <span class="beat-dot">·</span>
+                                    <span class="beat-dot">·</span>
+                                </div>
+                            </div>
+                            <!-- Step Row -->
+                            <div class="step-row" id="melodyStepRow">
+                                <!-- Populated by JS - 16 steps like DRUMMER -->
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Octave Control Box -->
+                    <div class="melody-control-box">
+                        <div class="melody-octave-control">
+                            <button class="bpm-btn" id="melodyOctMinus">-</button>
+                            <span class="octave-display" id="melodyOctDisplay">3</span>
+                            <button class="bpm-btn" id="melodyOctPlus">+</button>
                         </div>
                     </div>
                 </div>
@@ -439,6 +516,13 @@
                 </select>
             </section>
 
+            <!-- MEL Mode Chord Strip (only visible in MEL mode) - same style as MELODY -->
+            <section class="panel-section mel-chord-section" id="melChordSection" style="display: none;">
+                <div class="chord-strip" id="bassChordStrip">
+                    <!-- Populated by JS: shows chord progression like MELODY -->
+                </div>
+            </section>
+
             <!-- Fretboard -->
             <section class="panel-section fretboard-section">
                 <div id="fretboard" class="fretboard">
@@ -511,7 +595,7 @@
     <script src="js/sounds.js"></script>
     <script src="js/riffs.js"></script>
     <script src="js/beatgen.js"></script>
-    <script src="js/fretboard.js"></script>
+    <script src="js/fretboard.js?v=2"></script>
 
     <!-- MELODY PATTERNS INLINE -->
     <script>
@@ -568,7 +652,7 @@
     console.log('Patterns loaded:', window.CHORD_PROGRESSIONS.length, 'chords,', window.MELODIC_LINES.length, 'melodies');
     </script>
 
-    <script src="js/melody-gen.js?v=5"></script>
+    <script src="js/melody-gen.js?v=8"></script>
     <script src="js/app.js"></script>
 </body>
 </html>
