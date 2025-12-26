@@ -21,75 +21,80 @@ document.addEventListener('DOMContentLoaded', () => {
         melodyGen.syncToPattern(pattern);
     });
 
-    // Setup BASSIST BPM controls (sync with main BPM)
-    const bassBpmMinus = document.getElementById('bassBpmMinus');
-    const bassBpmPlus = document.getElementById('bassBpmPlus');
-    const bassBpmDisplay = document.getElementById('bassBpmDisplay');
+    // ===== GLOBAL AUDIO CONTROLS =====
 
-    // Update BASSIST BPM display when main BPM changes
-    const updateBassBpmDisplay = () => {
-        if (bassBpmDisplay) {
-            bassBpmDisplay.textContent = String(beatGen.bpm).padStart(3, '0');
-        }
-    };
+    // Global notation toggle (ITA/ABC)
+    const globalNotationToggle = document.getElementById('globalNotationToggle');
+    let useItalianNotation = false;
 
-    // Initial sync
-    updateBassBpmDisplay();
+    if (globalNotationToggle) {
+        globalNotationToggle.addEventListener('click', () => {
+            useItalianNotation = !useItalianNotation;
+            globalNotationToggle.classList.toggle('active', useItalianNotation);
 
-    // Override setBPM to also update BASSIST display
-    const originalSetBPM = beatGen.setBPM.bind(beatGen);
-    beatGen.setBPM = (bpm) => {
-        originalSetBPM(bpm);
-        updateBassBpmDisplay();
-    };
+            // Update MELODY notation
+            if (window.melodyGen) {
+                window.melodyGen.useItalianNotation = useItalianNotation;
+            }
 
-    // Setup BPM button with long press for BASSIST
-    const setupBassBpmButton = (btn, delta) => {
-        if (!btn) return;
-        let interval = null;
-        let timeout = null;
-        let speed = 150;
+            // Update BASSIST notation
+            if (window.fretboard) {
+                window.fretboard.useItalianNotes = useItalianNotation;
+                window.fretboard.updateDisplay();
+                if (window.fretboard.currentGroove) {
+                    window.fretboard.displayGroove();
+                }
+                if (window.fretboard.melodySyncActive) {
+                    window.fretboard.buildBassChordStrip();
+                }
+            }
 
-        const startPress = () => {
-            beatGen.adjustBpm(delta);
-            speed = 150;
-            timeout = setTimeout(() => {
-                interval = setInterval(() => {
-                    beatGen.adjustBpm(delta);
-                    if (speed > 30) {
-                        speed -= 20;
-                        clearInterval(interval);
-                        interval = setInterval(() => beatGen.adjustBpm(delta), speed);
-                    }
-                }, speed);
-            }, 400);
-        };
-
-        const endPress = () => {
-            clearTimeout(timeout);
-            clearInterval(interval);
-        };
-
-        btn.addEventListener('mousedown', startPress);
-        btn.addEventListener('mouseup', endPress);
-        btn.addEventListener('mouseleave', endPress);
-        btn.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            startPress();
+            console.log('Global notation:', useItalianNotation ? 'ITA' : 'ABC');
         });
-        btn.addEventListener('touchend', endPress);
-    };
+    }
 
-    setupBassBpmButton(bassBpmMinus, -1);
-    setupBassBpmButton(bassBpmPlus, 1);
+    // Global melody sound type
+    const melodyTypeGlobal = document.getElementById('melodyTypeGlobal');
+    if (melodyTypeGlobal) {
+        melodyTypeGlobal.addEventListener('change', (e) => {
+            if (window.melodyGen) {
+                window.melodyGen.selectInstrument(e.target.value);
+            }
+        });
+    }
 
-    // Keyboard shortcut per play/pause
-    document.addEventListener('keydown', (e) => {
-        if (e.code === 'Space' && e.target.tagName !== 'INPUT') {
-            e.preventDefault();
-            beatGen.togglePlay();
-        }
-    });
+    // Global melody/piano volume
+    const melodyVolumeGlobal = document.getElementById('melodyVolumeGlobal');
+    if (melodyVolumeGlobal) {
+        melodyVolumeGlobal.addEventListener('input', (e) => {
+            if (window.melodyGen && window.melodyGen.volume) {
+                const value = parseInt(e.target.value);
+                // 0 = mute (-Infinity), otherwise -30 to +10 dB
+                const vol = value === 0 ? -Infinity : (value / 100) * 40 - 30;
+                window.melodyGen.volume.volume.value = vol;
+            }
+        });
+    }
+
+    // Global bass sound type
+    const bassType = document.getElementById('bassType');
+    if (bassType) {
+        bassType.addEventListener('change', (e) => {
+            if (window.fretboard) {
+                window.fretboard.setBassType(e.target.value);
+            }
+        });
+    }
+
+    // Global bass volume
+    const bassVolume = document.getElementById('bassVolume');
+    if (bassVolume) {
+        bassVolume.addEventListener('input', (e) => {
+            if (window.fretboard) {
+                window.fretboard.setBassVolume(e.target.value / 100);
+            }
+        });
+    }
 
     console.log('App pronta!');
     console.log('Scegli un genere e una variazione, poi premi Play');

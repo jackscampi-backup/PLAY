@@ -5,10 +5,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Overview
 
 DRUMMER is a browser-based drum beat generator for bass practice. It includes:
+- **MIXER** - Audio mixer with volume faders and sound presets
 - **DRUMMER** - Drum machine with 64 patterns across 8 genres
-- **AUDIO** - Sound controls (volumes, presets, vinyl effect)
+- **PIANO** - Chord progressions and melodic accompaniment
 - **BASSIST** - 4-string fretboard with scales, arpeggios, and grooves
-- **CORSO** - Bass course with theory and exercises
 
 Uses Tone.js to synthesize all sounds in real-time - no audio files needed. Works offline by opening `index.html` directly.
 
@@ -33,7 +33,7 @@ npx live-server
 - **js/sounds.js** - Bass sound synthesis
 - **js/riffs.js** - Groove patterns for bass (GROOVES library)
 - **js/fretboard.js** - `Fretboard` class for bass visualization and playback
-- **js/course.js** - `Course` class for bass lessons
+- **js/melody-gen.js** - `MelodyGenerator` class for chord progressions
 - **js/app.js** - Entry point
 
 ### DRUMMER (Drum Machine)
@@ -53,12 +53,12 @@ npx live-server
 - GROOVES mode: Practice patterns that sync with DRUMMER
 - Transposition: Grooves follow selected root
 
-### CORSO (Bass Course)
+### PIANO (Accompaniment)
 
-- 5 modules: Foundation, Rock, Blues, Funk, Disco
-- Lessons with analytical content (intervals, scales, patterns)
-- Exercises link to GROOVES and DRUM patterns
-- Minimal UI: green LEDs, dropdown selection, monospace content
+- Chord progressions synced with DRUMMER
+- CHORDS mode: plays chord progressions (I-IV-V, etc.)
+- MELODY mode: generates melodies in artist styles
+- Octave control for pitch range
 
 ### Data Formats
 
@@ -92,26 +92,11 @@ npx live-server
 }
 ```
 
-**Course Lesson:**
-```javascript
-{
-    id: 'lesson-id',
-    module: 'foundation',
-    title: 'Lesson Title',
-    content: `Markdown-like content with tables and code blocks`,
-    exercises: [
-        { name: 'Exercise', groove: 'groove-id', drumPattern: 'pattern_key' }
-    ]
-}
-```
-
 ### Adding Content
 
 **New drum pattern:** Add to `PATTERNS` in `js/patterns.js`, add key to `GENRES`
 
 **New groove:** Add to `GROOVES` in `js/riffs.js`, categorize appropriately
-
-**New lesson:** Add to `LESSONS` in `js/course.js`, add to module in `COURSE_STRUCTURE`
 
 ### Styling
 

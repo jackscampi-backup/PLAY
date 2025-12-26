@@ -495,14 +495,7 @@ class BeatGenerator {
             }
         });
 
-        // BPM input
-        this.bpmDisplay.addEventListener('change', () => this.handleBpmInput());
-        this.bpmDisplay.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                this.handleBpmInput();
-                this.bpmDisplay.blur();
-            }
-        });
+        // BPM is now display-only (controlled via +/- buttons in MIXER)
 
         // BPM buttons with long press
         this.setupBpmButton(this.bpmMinus, -1);
@@ -515,14 +508,6 @@ class BeatGenerator {
                 this.togglePlay();
             }
         });
-    }
-
-    handleBpmInput() {
-        this.disableAutoMode();
-        let value = parseInt(this.bpmDisplay.value);
-        if (isNaN(value)) value = 120;
-        value = Math.max(40, Math.min(220, value));
-        this.setBPM(value);
     }
 
     setupBpmButton(btn, delta) {
@@ -571,7 +556,7 @@ class BeatGenerator {
 
     updateBpmDisplay() {
         // Always show 3 digits with leading zeros
-        this.bpmDisplay.value = String(this.bpm).padStart(3, '0');
+        this.bpmDisplay.textContent = String(this.bpm).padStart(3, '0');
     }
 
     createPatternDisplay(timeSignature = '4/4') {

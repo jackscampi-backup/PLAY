@@ -7,7 +7,7 @@ class BassSound {
     constructor() {
         this.isReady = false;
         this.synth = null;
-        this.volume = 0; // dB (increased from -6)
+        this.volume = 10; // dB (louder bass)
 
         // Note frequencies for bass (E1 to G3 range)
         // Standard 4-string bass tuning: E1-A1-D2-G2

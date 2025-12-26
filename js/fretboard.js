@@ -118,7 +118,6 @@ class Fretboard {
         this.renderFretboard();
         this.renderGrooveCategories();
         this.renderGrooveSelect();
-        this.renderGroovePatternDisplay();
         this.updateDisplay();
         this.updateGrooveSectionState();  // Start with groove section disabled
 
@@ -137,97 +136,6 @@ class Fretboard {
             if (!this.grooveModeActive) {
                 this.clearFretboard();
             }
-        });
-    }
-
-    /**
-     * Render the 16-step groove pattern display (same structure as DRUMMER)
-     */
-    renderGroovePatternDisplay() {
-        const container = document.getElementById('grooveStepRow');
-        if (!container) return;
-
-        container.innerHTML = '';
-
-        // Create 4 beat groups, each with 4 steps (same as DRUMMER)
-        for (let beat = 0; beat < 4; beat++) {
-            const beatGroup = document.createElement('div');
-            beatGroup.className = 'beat-group-steps';
-
-            for (let s = 0; s < 4; s++) {
-                const stepIndex = beat * 4 + s;
-                const step = document.createElement('div');
-                step.className = 'step';
-                step.dataset.step = stepIndex;
-                beatGroup.appendChild(step);
-            }
-            container.appendChild(beatGroup);
-        }
-    }
-
-    /**
-     * Update groove pattern display when a groove is selected
-     */
-    updateGroovePatternDisplay() {
-        const steps = document.querySelectorAll('#grooveStepRow .step');
-
-        // Clear all
-        steps.forEach(step => {
-            step.classList.remove('active', 'playing');
-        });
-
-        if (!this.currentGroove) return;
-
-        // Mark active steps (where there's a note)
-        const grooveSteps = this.currentGroove.steps;
-        const stepsPerBar = 16;
-
-        // Only show first bar in display
-        for (let i = 0; i < Math.min(stepsPerBar, grooveSteps.length); i++) {
-            if (grooveSteps[i] !== null) {
-                const stepEl = document.querySelector(`#grooveStepRow .step[data-step="${i}"]`);
-                if (stepEl) stepEl.classList.add('active');
-            }
-        }
-    }
-
-    /**
-     * Highlight current step in groove pattern display
-     */
-    highlightGrooveStep(stepIndex) {
-        const steps = document.querySelectorAll('#grooveStepRow .step');
-        steps.forEach(step => step.classList.remove('playing'));
-
-        // Show step within first bar (modulo 16)
-        const displayStep = stepIndex % 16;
-        const stepEl = document.querySelector(`#grooveStepRow .step[data-step="${displayStep}"]`);
-        if (stepEl) stepEl.classList.add('playing');
-
-        // Update beat counter
-        this.updateGrooveBeatCounter(displayStep);
-    }
-
-    /**
-     * Update beat counter in groove display
-     */
-    updateGrooveBeatCounter(step) {
-        const beat = Math.floor(step / 4) + 1;
-
-        document.querySelectorAll('#groovePatternDisplay .beat-num').forEach(beatEl => {
-            const beatNum = parseInt(beatEl.dataset.beat);
-            beatEl.classList.toggle('active', beatNum === beat);
-        });
-    }
-
-    /**
-     * Clear groove pattern display
-     */
-    clearGroovePatternDisplay() {
-        document.querySelectorAll('#grooveStepRow .step').forEach(step => {
-            step.classList.remove('active', 'playing');
-        });
-        document.querySelectorAll('#groovePatternDisplay .beat-num').forEach(beat => {
-            beat.classList.remove('active');
         });
     }
 
@@ -378,9 +286,15 @@ class Fretboard {
             btn.classList.toggle('active', btn.dataset.note === note);
         });
 
-        // Sync with MELODY key (avoid infinite loop)
+        // Sync PIANO to follow BASSIST root (BASSIST is the source of truth for key)
+        // Skip if called from PIANO to avoid redundant calls
         if (!fromMelody && window.melodyGen) {
-            window.melodyGen.selectKey(note, true);
+            window.melodyGen.selectKey(note);
+        }
+
+        // Rebuild chord strip if MEL sync is active
+        if (this.melodySyncActive) {
+            this.buildBassChordStrip();
         }
 
         // Clear fretboard highlights before updating
@@ -553,10 +467,7 @@ class Fretboard {
         this.updateDisplay();
     }
 
-    toggleNotation() {
-        this.useItalianNotes = !this.useItalianNotes;
-        this.updateDisplay();
-    }
+    // Note: toggleNotation() removed - now handled by global ITA toggle in app.js
 
     toggleShape() {
         this.showShape = !this.showShape;
@@ -724,7 +635,18 @@ class Fretboard {
             await bassSound.init();
         }
 
-        // If MEL mode is active, play root notes as guide
+        // If groove is selected (either in groove mode or with MEL active), play groove
+        // The groove will transpose dynamically if MEL mode is active
+        if (this.currentGroove && (this.grooveModeActive || this.melodySyncActive)) {
+            if (this.isPlayingGroove) {
+                this.stopGroovePlay();
+            } else {
+                this.startGroovePlay();
+            }
+            return;
+        }
+
+        // If MEL mode is active but no groove, play root notes as guide
         if (this.melodySyncActive) {
             if (this.isPlayingMelody) {
                 this.stopMelodyPlay();
@@ -734,20 +656,11 @@ class Fretboard {
             return;
         }
 
-        // If groove mode active and a groove is selected, play groove
-        if (this.grooveModeActive && this.currentGroove) {
-            if (this.isPlayingGroove) {
-                this.stopGroovePlay();
-            } else {
-                this.startGroovePlay();
-            }
+        // Otherwise play scale
+        if (this.isPlaying) {
+            this.stopPlay();
         } else {
-            // Otherwise play scale
-            if (this.isPlaying) {
-                this.stopPlay();
-            } else {
-                this.startPlay();
-            }
+            this.startPlay();
         }
     }
 
@@ -932,7 +845,6 @@ class Fretboard {
         if (!grooveId) {
             this.currentGroove = null;
             this.updateDisplay();
-            this.clearGroovePatternDisplay();
             return;
         }
 
@@ -940,7 +852,6 @@ class Fretboard {
         if (this.currentGroove) {
             console.log('BASSIST: Selected groove:', this.currentGroove.name);
             this.displayGroove();
-            this.updateGroovePatternDisplay();
 
             // Sync DRUMMER to matching genre/pattern
             this.syncDrummerToGroove();
@@ -1005,7 +916,7 @@ class Fretboard {
     }
 
     /**
-     * Display groove notes on fretboard (transposed to current root)
+     * Display groove notes on fretboard (transposed to current root or chord)
      */
     displayGroove() {
         if (!this.currentGroove) return;
@@ -1015,8 +926,9 @@ class Fretboard {
             n.classList.remove('in-scale', 'root', 'in-arpeggio', 'riff-note');
         });
 
-        // Get transposed steps
-        const transposedSteps = this.getTransposedGrooveSteps();
+        // Get transposed steps - use dynamic offset if MEL mode active (follows chord)
+        const offset = this.getDynamicRootOffset();
+        const transposedSteps = this.currentGroove.steps.map(step => this.transposeStep(step, offset));
 
         // Highlight all notes used in this groove
         const usedNotes = new Set();
@@ -1075,13 +987,11 @@ class Fretboard {
                         bassSound.play(null, step.s, step.f, '16n');
                         Tone.Draw.schedule(() => {
                             this.highlightGrooveNote(step);
-                            this.highlightGrooveStep(stepIndex);
                         }, time);
                     }
                 } else {
                     Tone.Draw.schedule(() => {
                         this.highlightGrooveNote(null);
-                        this.highlightGrooveStep(stepIndex);
                     }, time);
                 }
             },
@@ -1184,14 +1094,6 @@ class Fretboard {
         }
 
         this.highlightGrooveNote(null);
-
-        // Clear playing highlight but keep active notes
-        document.querySelectorAll('#grooveStepRow .step').forEach(step => {
-            step.classList.remove('playing');
-        });
-        document.querySelectorAll('#groovePatternDisplay .beat-num').forEach(beat => {
-            beat.classList.remove('active');
-        });
     }
 
     /**
@@ -1218,25 +1120,16 @@ class Fretboard {
      * @param {string[]} chordNotes - Array of note names without octave (e.g., ['E', 'G#', 'B'])
      */
     showMelodyChord(root, chordNotes) {
-        // Always track current melody chord root (for groove transposition)
+        // Track current chord root (for groove transposition)
+        // NOTE: rootNote stays as the user-selected KEY, currentMelodyChordRoot follows the chord
         this.currentMelodyChordRoot = root;
 
-        // Only update UI if melody sync is active
-        if (!this.melodySyncActive) return;
+        // Update groove display to show transposed notes for current chord
+        if (this.melodySyncActive && this.currentGroove) {
+            this.displayGroove();
+        }
 
-        // Update root note for UI
-        this.rootNote = root;
-
-        // Update BASS root buttons UI (not MELODY key buttons)
-        document.querySelectorAll('#rootButtons .root-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.note === root);
-        });
-
-        // Clear chord display (notes shown on MELODY mini-fretboard, not here)
-        this.melodyChordNotes = null;
-        this.melodyChordPositions = null;
-        this.showMelodyMode = false;
-        this.updateDisplay();
+        // Chord strip position is updated directly from melody-gen.js via updateBassChordStripPosition()
     }
 
     /**
@@ -1360,15 +1253,15 @@ class Fretboard {
     }
 
     /**
-     * Build BASS chord strip (same style as MELODY)
+     * Build BASS chord strip (shows PIANO chords)
      */
     buildBassChordStrip() {
         const strip = document.getElementById('bassChordStrip');
         if (!strip) return;
 
-        // Get pattern from MELODY
+        // Get pattern from PIANO
         if (!window.melodyGen || !window.melodyGen.currentPattern) {
-            strip.innerHTML = '<span style="color: #555;">Seleziona pattern in MELODY</span>';
+            strip.innerHTML = '<span style="color: #555;">Seleziona pattern in PIANO</span>';
             return;
         }
 
@@ -1541,6 +1434,37 @@ class Fretboard {
         document.querySelectorAll('.fret-note.playing').forEach(el => {
             el.classList.remove('playing');
         });
+    }
+
+    /**
+     * Set bass sound type (from global AUDIO control)
+     */
+    setBassType(type) {
+        if (!bassSound) return;
+
+        const presets = {
+            'finger': { oscillator: { type: 'triangle' }, envelope: { attack: 0.02, decay: 0.3, sustain: 0.4, release: 0.8 } },
+            'pick': { oscillator: { type: 'sawtooth' }, envelope: { attack: 0.01, decay: 0.2, sustain: 0.3, release: 0.5 } },
+            'synth': { oscillator: { type: 'square' }, envelope: { attack: 0.01, decay: 0.1, sustain: 0.6, release: 0.4 } },
+            'upright': { oscillator: { type: 'sine' }, envelope: { attack: 0.05, decay: 0.4, sustain: 0.3, release: 1.0 } }
+        };
+
+        const preset = presets[type];
+        if (preset && bassSound.synth) {
+            bassSound.synth.set(preset);
+            console.log('Bass type set to:', type);
+        }
+    }
+
+    /**
+     * Set bass volume (from global AUDIO control)
+     */
+    setBassVolume(value) {
+        if (!bassSound) return;
+
+        // value is 0-1, convert to dB range (-20 to +15)
+        const db = (value * 35) - 20;
+        bassSound.setVolume(db);
     }
 }
 

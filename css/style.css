@@ -56,11 +56,19 @@ body {
     padding: 20px;
 }
 
-/* ===== RACK CONTAINER (dual unit layout) ===== */
+/* ===== RACK WRAPPER (main vertical layout) ===== */
+.rack-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* ===== RACK CONTAINER (vertical stack layout) ===== */
 .rack-container {
     display: flex;
+    flex-direction: column;
     gap: 20px;
-    align-items: flex-start;
+    align-items: center;
 }
 
 @media (max-width: 1100px) {
@@ -83,27 +91,8 @@ body {
 }
 
 .rack-main {
-    width: 800px;
+    width: 1100px;
     flex-shrink: 0;
-}
-
-.rack-audio {
-    width: 280px;
-    flex-shrink: 0;
-}
-
-/* Equal height for both rack units */
-.rack-container {
-    align-items: stretch;
-}
-
-.rack-audio {
-    display: flex;
-    flex-direction: column;
-}
-
-.rack-audio .rack-panel {
-    flex: 1;
 }
 
 @media (max-width: 1100px) {
@@ -113,12 +102,7 @@ body {
 
     .rack-main {
         width: 100%;
-        max-width: 800px;
-    }
-
-    .rack-audio {
-        width: 100%;
-        max-width: 800px;
+        max-width: 1100px;
     }
 }
 
@@ -213,14 +197,6 @@ body {
         0 0 16px rgba(255,170,0,0.4);
 }
 
-/* Header BPM Controls */
-.header-bpm {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
-}
-
 .bpm-btn {
     width: 32px;
     height: 32px;
@@ -250,30 +226,6 @@ body {
     box-shadow:
         0 1px 3px rgba(0,0,0,0.4),
         inset 0 2px 4px rgba(0,0,0,0.3);
-}
-
-.bpm-input {
-    width: 100px;
-    height: 55px;
-    background: #000;
-    padding: 0;
-    border-radius: 4px;
-    border: 2px solid #333;
-    box-shadow: inset 0 2px 8px rgba(0,0,0,0.8);
-    font-family: '7LED', monospace;
-    font-size: 38px !important;
-    color: var(--display-orange);
-    text-shadow: 0 0 15px var(--display-glow);
-    text-align: center;
-    outline: none;
-    line-height: 55px;
-}
-
-.bpm-input:focus {
-    border-color: var(--display-orange);
-    box-shadow:
-        inset 0 2px 8px rgba(0,0,0,0.8),
-        0 0 10px var(--display-glow);
 }
 
 /* ===== MAIN PANEL ===== */
@@ -505,122 +457,7 @@ body {
     letter-spacing: 2px;
 }
 
-/* ===== AUDIO PANEL ===== */
-.rack-audio .logo-display {
-    font-size: 2.2rem;
-}
-
-.audio-panel {
-    padding: 15px 20px;
-}
-
-.audio-section {
-    margin-bottom: 20px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid #252525;
-}
-
-.audio-section:last-child {
-    margin-bottom: 0;
-    padding-bottom: 0;
-    border-bottom: none;
-}
-
-/* Instrument row - label + select on first line, slider below */
-.instrument-row {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 8px 12px;
-}
-
-.instrument-label {
-    font-family: 'Oswald', sans-serif;
-    font-size: 0.8rem;
-    font-weight: 500;
-    min-width: 55px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: #aaa;
-}
-
-.instrument-row .audio-select {
-    flex: 1;
-    font-family: '7LED', monospace;
-    font-size: 1.2rem;
-    padding: 8px 12px;
-    text-transform: uppercase;
-}
-
-.instrument-row .audio-slider {
-    width: calc(100% - 70px);
-    flex: none;
-    margin-top: 12px;
-    margin-left: 70px;
-}
-
-.audio-control {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 12px;
-}
-
-.audio-control:last-child {
-    margin-bottom: 0;
-}
-
-.audio-control .control-name {
-    font-family: 'Oswald', sans-serif;
-    font-size: 0.75rem;
-    font-weight: 500;
-    min-width: 50px;
-    text-align: right;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: #888;
-}
-
-/* Audio Slider */
-.audio-slider {
-    flex: 1;
-    -webkit-appearance: none;
-    appearance: none;
-    height: 8px;
-    background: #0a0a0a;
-    border-radius: 4px;
-    border: 1px solid #333;
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.8);
-    cursor: pointer;
-}
-
-.audio-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 18px;
-    height: 18px;
-    background: linear-gradient(180deg, #555 0%, #333 50%, #222 100%);
-    border-radius: 50%;
-    border: 2px solid #666;
-    cursor: pointer;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.5);
-}
-
-.audio-slider::-webkit-slider-thumb:hover {
-    background: linear-gradient(180deg, #666 0%, #444 50%, #333 100%);
-}
-
-.audio-slider::-moz-range-thumb {
-    width: 18px;
-    height: 18px;
-    background: linear-gradient(180deg, #555 0%, #333 50%, #222 100%);
-    border-radius: 50%;
-    border: 2px solid #666;
-    cursor: pointer;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.5);
-}
-
-/* Audio Select (dropdown) */
+/* Audio Select (dropdown) - used in BASSIST grooves */
 .audio-select {
     flex: 1;
     padding: 6px 10px;
@@ -647,151 +484,15 @@ body {
     color: var(--display-orange);
 }
 
-/* Auto Button */
-.auto-btn {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 6px 12px;
-    background: linear-gradient(180deg, #3a3a3a 0%, #252525 50%, #1a1a1a 100%);
-    border: 1px solid #444;
-    border-radius: 4px;
-    cursor: pointer;
-    box-shadow:
-        0 2px 4px rgba(0,0,0,0.4),
-        inset 0 1px 0 rgba(255,255,255,0.05);
-    transition: all 0.1s ease;
-}
-
-.auto-btn:hover {
-    background: linear-gradient(180deg, #454545 0%, #303030 50%, #252525 100%);
-}
-
-.auto-btn:active {
-    transform: translateY(1px);
-}
-
-.auto-btn .auto-led {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--led-green-dim);
-    box-shadow: inset 0 1px 2px rgba(0,0,0,0.8);
-}
-
-.auto-btn .auto-label {
-    font-family: 'Oswald', sans-serif;
-    font-size: 0.7rem;
-    font-weight: 500;
-    letter-spacing: 1px;
-    color: #666;
-}
-
-.auto-btn.active {
-    background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 50%, #0d0d0d 100%);
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
-}
-
-.auto-btn.active .auto-led {
-    background: var(--led-green);
-    box-shadow:
-        0 0 8px var(--led-green),
-        0 0 16px rgba(51,255,51,0.4);
-}
-
-.auto-btn.active .auto-label {
-    color: var(--led-green);
-}
-
-/* BPM Control in Audio Panel */
-.bpm-control {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
-
-.bpm-control .bpm-btn {
-    width: 28px;
-    height: 28px;
-    font-size: 0.9rem;
-    flex-shrink: 0;
-}
-
-.bpm-control .bpm-input {
-    flex: 1;
-    min-width: 0;
-    padding: 4px 6px;
-    font-size: 1.1rem;
-}
-
 /* ===== RESPONSIVE ===== */
-@media (max-width: 1100px) {
-    .rack-audio .audio-panel {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 15px;
-    }
-
-    .rack-audio .audio-section {
-        margin-bottom: 0;
-        padding-bottom: 0;
-        border-bottom: none;
-        border-right: 1px solid #252525;
-        padding-right: 15px;
-    }
-
-    .rack-audio .audio-section:nth-child(2n) {
-        border-right: none;
-        padding-right: 0;
-    }
-}
-
 @media (max-width: 700px) {
     .button-grid {
         grid-template-columns: repeat(2, 1fr);
     }
 
-    .control-section {
-        flex-direction: column;
-        align-items: center;
-        gap: 20px;
-    }
-
-    .transport-buttons {
-        justify-content: center;
-    }
-
     .logo-display {
         font-size: 2rem;
     }
-
-    .rack-audio .audio-panel {
-        grid-template-columns: 1fr;
-    }
-
-    .rack-audio .audio-section {
-        border-right: none;
-        border-bottom: 1px solid #252525;
-        padding-right: 0;
-        padding-bottom: 15px;
-    }
-
-    .rack-audio .audio-section:last-child {
-        border-bottom: none;
-    }
-}
-
-/* ===== BASSIST PANEL ===== */
-
-/* Rack wrapper for stacking panels */
-.rack-wrapper {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    align-items: center;
 }
 
 /* ===== MELODY RACK ===== */
@@ -808,13 +509,6 @@ body {
 
 .melody-panel {
     padding: 25px 30px;
-}
-
-/* Key grid - 12 chromatic buttons in 1 row */
-.melody-panel .key-grid {
-    display: grid;
-    grid-template-columns: repeat(12, 1fr);
-    gap: 6px;
 }
 
 /* Melody row - horizontal layout */
@@ -834,43 +528,11 @@ body {
     flex: 1;
 }
 
-.melody-vol-group {
-    flex: 1;
-}
 
 /* Mode toggle compact - 2 buttons horizontal */
 .mode-toggle-compact {
     display: flex;
     gap: 8px;
-}
-
-/* Octave control - like BPM */
-.melody-octave-control {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.melody-octave-control .bpm-btn {
-    width: 28px;
-    height: 28px;
-    font-size: 1.2rem;
-}
-
-.octave-display {
-    width: 40px;
-    height: 36px;
-    background: #000;
-    border-radius: 4px;
-    border: 2px solid #333;
-    box-shadow: inset 0 2px 6px rgba(0,0,0,0.8);
-    font-family: '7LED', monospace;
-    font-size: 24px;
-    color: var(--display-orange);
-    text-shadow: 0 0 10px var(--display-glow);
-    text-align: center;
-    line-height: 32px;
-    display: inline-block;
 }
 
 /* Sound select compact */
@@ -1012,160 +674,6 @@ body {
     margin: 0 2px;
 }
 
-/* Melody bottom section - Beat indicator + Octave control */
-.melody-bottom-section {
-    margin-top: 10px;
-}
-
-.melody-bottom-layout {
-    display: flex;
-    gap: 15px;
-    align-items: stretch;
-}
-
-/* Melody pattern section - same styling as DRUMMER/BASS pattern sections */
-.melody-pattern-section {
-    flex: 1;
-    background: var(--panel-surface);
-    border-radius: 6px;
-    padding: 15px 0;
-    border: 1px solid #252525;
-}
-
-.melody-control-box {
-    flex: 0 0 auto;
-    background: #1a1a1a;
-    border: 1px solid #333;
-    border-radius: 4px;
-    padding: 8px 15px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.melody-octave-control {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.octave-display {
-    font-family: 'DSEG7Classic', 'Share Tech Mono', monospace;
-    font-size: 1.5rem;
-    color: var(--display-orange);
-    min-width: 30px;
-    text-align: center;
-}
-
-/* Melody display row - display + mini fretboard side by side */
-.melody-display-row {
-    display: flex;
-    gap: 20px;
-    align-items: stretch;
-}
-
-.melody-display-row .chord-display {
-    flex: 0 0 200px;
-    min-height: auto;
-}
-
-/* Mini Fretboard */
-.mini-fretboard {
-    flex: 1;
-    background: #1a1a1a;
-    border-radius: 4px;
-    padding: 10px 15px;
-    border: 1px solid #333;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-.mini-string {
-    display: flex;
-    align-items: center;
-    height: 28px;
-}
-
-.mini-string-label {
-    width: 25px;
-    font-family: 'Oswald', sans-serif;
-    font-size: 0.75rem;
-    color: #666;
-    text-align: center;
-    flex-shrink: 0;
-}
-
-.mini-frets {
-    display: flex;
-    flex: 1;
-    position: relative;
-}
-
-.mini-fret {
-    flex: 1;
-    height: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    border-right: 2px solid #444;
-    background: linear-gradient(180deg, #2a2a2a 0%, #1f1f1f 50%, #1a1a1a 100%);
-}
-
-.mini-fret.mini-nut {
-    flex: 0 0 30px;
-    background: linear-gradient(90deg, #555 0%, #444 50%, #333 100%);
-    border-right: 3px solid #666;
-}
-
-.mini-fret.marker {
-    background: linear-gradient(180deg, #2d2d2d 0%, #222 50%, #1d1d1d 100%);
-}
-
-/* String line */
-.mini-fret::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: linear-gradient(180deg, #888 0%, #555 100%);
-    border-radius: 1px;
-}
-
-/* Mini note dot */
-.mini-fret .mini-note {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: 'Oswald', sans-serif;
-    font-size: 0.6rem;
-    font-weight: 600;
-    z-index: 2;
-    opacity: 0;
-    transition: all 0.15s ease;
-}
-
-.mini-fret .mini-note.active {
-    opacity: 1;
-    background: var(--led-green-dim);
-    color: #fff;
-    border: 2px solid var(--led-green);
-    box-shadow: 0 0 8px rgba(51, 255, 51, 0.3);
-}
-
-.mini-fret .mini-note.root {
-    opacity: 1;
-    background: var(--display-orange);
-    color: #000;
-    border: 2px solid #ffaa00;
-    box-shadow: 0 0 10px var(--display-glow);
-}
-
 /* BASSIST panel - full width */
 .rack-bassist {
     width: 1100px;  /* 800 + 280 + 20 gap */
@@ -1245,6 +753,77 @@ body {
     right: 40px;
     display: flex;
     gap: 8px;
+    align-items: center;
+}
+
+/* BPM Control in Header */
+.header-toggles-right .bpm-control {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.header-toggles-right .bpm-display {
+    width: 50px;
+    height: 32px;
+    background: #000;
+    border-radius: 4px;
+    border: 2px solid #222;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.9);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 1.1rem;
+    color: var(--display-orange);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-shadow: 0 0 8px rgba(255,102,0,0.5);
+}
+
+.header-toggles-right .bpm-btn {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: none;
+    background: linear-gradient(180deg, #3a3a3a 0%, #252525 50%, #1a1a1a 100%);
+    border-radius: 4px;
+    cursor: pointer;
+    border: 1px solid #444;
+    color: #888;
+    font-size: 1rem;
+    font-weight: bold;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+.header-toggles-right .bpm-btn:hover {
+    background: linear-gradient(180deg, #454545 0%, #303030 50%, #252525 100%);
+    color: #fff;
+}
+
+.header-toggles-right .bpm-btn:active {
+    transform: translateY(1px);
+}
+
+/* Octave Control in Header */
+.header-toggles-right .octave-control {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.header-toggles-right .octave-display {
+    width: 32px;
+    height: 32px;
+    background: #000;
+    border-radius: 4px;
+    border: 2px solid #222;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.9);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 1.1rem;
+    color: var(--display-orange);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-shadow: 0 0 8px rgba(255,102,0,0.5);
 }
 
 .bassist-panel {
@@ -1260,12 +839,6 @@ body {
 /* Scale button grid - 5 buttons */
 .scale-grid {
     grid-template-columns: repeat(5, 1fr);
-    gap: 8px;
-}
-
-/* View toggle grid - 4 buttons */
-.view-grid-4 {
-    grid-template-columns: repeat(4, 1fr);
     gap: 8px;
 }
 
@@ -1354,104 +927,6 @@ body {
 .groove-select-full option {
     background: #1a1a1a;
     color: var(--display-orange);
-}
-
-/* Bassist Bottom Section - Pattern + Controls */
-.bassist-bottom-section {
-    margin-top: 10px;
-}
-
-.bassist-bottom-layout {
-    display: flex;
-    gap: 15px;
-    align-items: stretch;
-}
-
-.bass-pattern-section {
-    width: 760px;  /* Same as DRUMMER pattern section (800px - 40px padding) */
-    flex-shrink: 0;
-    background: var(--panel-surface);
-    border-radius: 6px;
-    padding: 15px 0;
-    border: 1px solid #252525;
-}
-
-.bassist-control-box {
-    flex: 1;
-    display: flex;
-    background: var(--panel-surface);
-    border-radius: 6px;
-    border: 1px solid #252525;
-}
-
-/* BPM Control in BASSIST Panel - Analog Style */
-.bassist-bpm-control {
-    flex: 1;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-}
-
-/* Analog rotary-style buttons */
-.bassist-bpm-control .bpm-btn {
-    width: 32px;
-    height: 32px;
-    font-size: 1.4rem;
-    font-weight: bold;
-    border: none;
-    border-radius: 50%;
-    background:
-        radial-gradient(ellipse at 30% 20%, #555 0%, #333 40%, #1a1a1a 100%);
-    color: #888;
-    cursor: pointer;
-    box-shadow:
-        0 3px 8px rgba(0,0,0,0.6),
-        inset 0 1px 1px rgba(255,255,255,0.1),
-        inset 0 -2px 4px rgba(0,0,0,0.4);
-    transition: all 0.1s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    line-height: 1;
-}
-
-.bassist-bpm-control .bpm-btn:hover {
-    background:
-        radial-gradient(ellipse at 30% 20%, #666 0%, #444 40%, #252525 100%);
-    color: #ccc;
-}
-
-.bassist-bpm-control .bpm-btn:active {
-    transform: scale(0.95);
-    box-shadow:
-        0 1px 4px rgba(0,0,0,0.6),
-        inset 0 2px 4px rgba(0,0,0,0.5);
-}
-
-/* LED-style 7-segment display */
-.bassist-bpm-control .bpm-display {
-    width: 100px;
-    height: 50px;
-    background: #000;
-    border-radius: 4px;
-    border: 3px solid #222;
-    box-shadow:
-        inset 0 0 20px rgba(0,0,0,0.9),
-        inset 0 0 5px rgba(255,102,0,0.1),
-        0 1px 0 rgba(255,255,255,0.05);
-    font-family: '7LED', monospace;
-    font-size: 36px;
-    color: var(--display-orange);
-    text-shadow:
-        0 0 10px var(--display-glow),
-        0 0 20px var(--display-glow),
-        0 0 30px rgba(255,102,0,0.3);
-    text-align: center;
-    line-height: 44px;
-    display: inline-block;
-    position: relative;
 }
 
 
@@ -1725,12 +1200,12 @@ body {
 @media (max-width: 1150px) {
     .rack-melody {
         width: 100%;
-        max-width: 800px;
+        max-width: 1100px;
     }
 
     .rack-bassist {
         width: 100%;
-        max-width: 800px;
+        max-width: 1100px;
     }
 
     .root-grid {
@@ -1766,525 +1241,142 @@ body {
     }
 }
 
-/* ===== CORSO SECTION ===== */
-
-.rack-corso {
-    width: 1100px;
-    flex-shrink: 0;
+/* ===== MIXER UNIT ===== */
+.rack-mixer {
+    width: 100%;
+    max-width: 1100px;
+    margin-bottom: 20px;
 }
 
-.rack-corso .rack-header {
-    justify-content: center;
-    padding: 15px 40px;
+.mixer-panel {
+    padding: 10px 15px 15px;
 }
 
-.corso-panel {
-    padding: 20px 30px;
+.mixer-channels {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.mixer-channel {
     display: flex;
     flex-direction: column;
-    gap: 15px;
-}
-
-/* Module buttons grid */
-.module-grid {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-
-.module-btn {
-    flex: 1;
-    min-width: 100px;
-    padding: 12px 16px;
-    border: 1px solid #444;
-    background: linear-gradient(180deg, #3a3a3a 0%, #252525 50%, #1a1a1a 100%);
-    border-radius: 4px;
-    cursor: pointer;
-    display: flex;
     align-items: center;
-    gap: 10px;
-    transition: all 0.15s ease;
-    box-shadow:
-        0 3px 6px rgba(0,0,0,0.5),
-        inset 0 1px 0 rgba(255,255,255,0.08);
-}
-
-.module-btn:hover {
-    background: linear-gradient(180deg, #454545 0%, #303030 50%, #252525 100%);
-    border-color: #555;
-}
-
-.module-btn.active {
-    border-color: #666;
-    box-shadow:
-        0 1px 3px rgba(0,0,0,0.5),
-        inset 0 2px 4px rgba(0,0,0,0.4);
-}
-
-.module-led {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: var(--led-green-dim);
-    transition: all 0.15s ease;
-    box-shadow: inset 0 1px 2px rgba(0,0,0,0.8);
-}
-
-.module-btn.active .module-led {
-    background: var(--led-green);
-    box-shadow:
-        0 0 8px var(--led-green),
-        0 0 16px rgba(51,255,51,0.4);
-}
-
-.module-name {
-    font-family: 'Oswald', sans-serif;
-    font-size: 0.9rem;
-    font-weight: 500;
-    letter-spacing: 1px;
-    color: #888;
-    transition: color 0.15s ease;
-}
-
-.module-btn.active .module-name {
-    color: #ddd;
-}
-
-/* Lesson select */
-.lesson-select {
-    width: 100%;
-    padding: 10px 15px;
-    font-family: '7LED', monospace;
-    font-size: 1.2rem;
-    background: #000;
-    color: var(--display-orange);
-    border: 2px solid #333;
-    text-transform: uppercase;
-}
-
-/* Lesson display area - LCD STYLE */
-.lesson-section {
+    background: var(--panel-surface);
+    border-radius: 4px;
+    padding: 8px 6px;
+    min-width: 70px;
     flex: 1;
 }
 
-.lesson-display {
-    background: #000;
-    border: 2px solid #333;
-    border-radius: 4px;
-    padding: 20px;
-    min-height: 350px;
-    max-height: 500px;
-    overflow-y: auto;
-    box-shadow: inset 0 2px 8px rgba(0,0,0,0.8);
+.mixer-channel.master-channel {
+    min-width: 90px;
+    background: linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%);
+    border: 1px solid #333;
 }
 
-.lesson-placeholder {
-    color: var(--display-orange);
-    text-align: center;
-    padding: 80px 20px;
-    font-family: '7LED', monospace;
-    font-size: 1.2rem;
-    opacity: 0.5;
+.mixer-channel.fx-channel {
+    min-width: 80px;
 }
 
-/* Lesson header - LCD title */
-.lesson-header {
-    margin-bottom: 15px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #333;
-}
-
-.lesson-title {
-    font-family: '7LED', monospace;
-    font-size: 1.6rem;
-    color: var(--display-orange);
-    text-shadow: 0 0 10px var(--display-glow);
-    letter-spacing: 0;
-}
-
-/* Lesson content - LCD style */
-.lesson-content {
-    margin-bottom: 20px;
-    font-family: 'Share Tech Mono', monospace;
-    color: var(--display-orange);
-    font-size: 0.85rem;
-    line-height: 1.5;
-}
-
-.lesson-content p {
-    margin-bottom: 10px;
-}
-
-.lesson-content h4 {
-    font-family: '7LED', monospace;
-    font-size: 1.1rem;
-    color: var(--display-orange);
-    margin: 15px 0 8px;
-    text-shadow: 0 0 8px var(--display-glow);
-}
-
-.lesson-content h5 {
+.channel-label {
     font-family: 'Oswald', sans-serif;
-    font-size: 0.8rem;
+    font-size: 0.65rem;
+    font-weight: 600;
     color: var(--display-orange);
-    margin: 12px 0 6px;
-    letter-spacing: 1px;
     text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
 }
 
-.lesson-content strong {
-    color: #fff;
-}
-
-.lesson-content code {
+/* Vertical Fader */
+.mixer-fader {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 30px;
+    height: 80px;
     background: transparent;
-    padding: 0;
-    font-family: 'Share Tech Mono', monospace;
-    color: var(--led-green);
-    font-size: 1em;
-}
-
-.lesson-content .code-block {
-    background: #0a0a0a;
-    border: 1px solid #222;
-    border-radius: 2px;
-    padding: 10px 12px;
-    margin: 10px 0;
-    overflow-x: auto;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.85rem;
-    color: var(--led-green);
-    white-space: pre;
-    line-height: 1.3;
-    text-shadow: 0 0 5px rgba(51,255,51,0.3);
-}
-
-.lesson-content blockquote {
-    border-left: 2px solid var(--display-orange);
-    padding-left: 10px;
-    margin: 10px 0;
-    color: var(--display-orange);
-    opacity: 0.8;
-}
-
-.lesson-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 10px 0;
-    font-size: 0.8rem;
-    font-family: 'Share Tech Mono', monospace;
-}
-
-.lesson-table td {
-    padding: 6px 10px;
-    border: 1px solid #222;
-    color: var(--display-orange);
-}
-
-.lesson-table tr:first-child td {
-    background: #111;
-    color: var(--led-green);
-    font-weight: normal;
-    text-transform: uppercase;
-    font-size: 0.75rem;
-}
-
-.lesson-table tr:nth-child(even) {
-    background: rgba(255,102,0,0.03);
-}
-
-/* Exercises section - Physical buttons */
-.lesson-exercises {
-    border-top: 1px solid #333;
-    padding-top: 15px;
-    margin-top: 15px;
-}
-
-.exercise-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 6px 0;
-}
-
-.exercise-name {
-    color: var(--display-orange);
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.85rem;
-    min-width: 140px;
-    text-shadow: 0 0 5px var(--display-glow);
-}
-
-/* Physical rack buttons for exercises */
-.exercise-btn {
-    padding: 10px 16px;
-    background: linear-gradient(180deg, #3a3a3a 0%, #252525 50%, #1a1a1a 100%);
-    border: 1px solid #444;
-    border-radius: 4px;
-    color: #888;
-    font-family: 'Oswald', sans-serif;
-    font-size: 0.8rem;
-    font-weight: 500;
-    letter-spacing: 1px;
     cursor: pointer;
-    transition: all 0.1s ease;
-    box-shadow:
-        0 3px 6px rgba(0,0,0,0.5),
-        inset 0 1px 0 rgba(255,255,255,0.08);
+    /* Vertical orientation */
+    writing-mode: vertical-lr;
+    direction: rtl;
 }
 
-.exercise-btn:hover {
-    background: linear-gradient(180deg, #454545 0%, #303030 50%, #252525 100%);
-    color: #fff;
-    border-color: #555;
-}
-
-.exercise-btn:active {
-    transform: translateY(1px);
-    box-shadow:
-        0 1px 3px rgba(0,0,0,0.5),
-        inset 0 2px 4px rgba(0,0,0,0.3);
-}
-
-/* Scrollbar styling for lesson display */
-.lesson-display::-webkit-scrollbar {
+.mixer-fader::-webkit-slider-runnable-track {
     width: 6px;
-}
-
-.lesson-display::-webkit-scrollbar-track {
-    background: #000;
-}
-
-.lesson-display::-webkit-scrollbar-thumb {
-    background: #333;
+    height: 100%;
+    background: linear-gradient(180deg, #444 0%, #222 100%);
     border-radius: 3px;
+    border: 1px solid #555;
 }
 
-.lesson-display::-webkit-scrollbar-thumb:hover {
-    background: #444;
-}
-
-/* Melody Timeline */
-.melody-timeline {
-    display: flex;
-    gap: 4px;
-    padding: 10px;
-    background: #0a0a0a;
-    border-radius: 4px;
-    border: 1px solid #333;
-    overflow-x: auto;
-    min-height: 50px;
-    align-items: center;
-}
-
-.melody-timeline::-webkit-scrollbar {
-    height: 6px;
-}
-
-.melody-timeline::-webkit-scrollbar-track {
-    background: #000;
-}
-
-.melody-timeline::-webkit-scrollbar-thumb {
-    background: #333;
-    border-radius: 3px;
-}
-
-.timeline-note {
-    flex-shrink: 0;
-    min-width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #1a1a1a;
-    border: 1px solid #333;
-    border-radius: 4px;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.75rem;
-    color: #666;
-    transition: all 0.1s ease;
-}
-
-.timeline-note.current {
-    background: var(--display-orange);
-    color: #000;
-    font-weight: bold;
-    border-color: #ffaa00;
-    box-shadow: 0 0 10px var(--display-glow);
-    transform: scale(1.1);
-}
-
-.timeline-note.played {
-    background: #2a2a2a;
-    color: #444;
-    border-color: #222;
-}
-
-.timeline-note.next {
-    background: #252520;
-    color: var(--display-orange);
-    border-color: #444;
-}
-
-.timeline-note.timeline-rest {
+.mixer-fader::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 28px;
+    height: 14px;
     background: #111;
-    color: #333;
-    border-color: #222;
-    min-width: 20px;
-}
-
-.timeline-note.timeline-rest.current {
-    background: #222;
-    color: #555;
-    border-color: #444;
-    box-shadow: none;
-    transform: none;
-}
-
-.timeline-bar-marker {
-    flex-shrink: 0;
-    width: 2px;
-    height: 40px;
-    background: #444;
-    margin: 0 4px;
-}
-
-/* NEXT button for melody mode */
-.melody-next-btn {
-    background: linear-gradient(180deg, #4a3a2a 0%, #352a1a 50%, #2a1f15 100%);
-    border-color: #5a4a3a;
-}
-
-.melody-next-btn:hover {
-    background: linear-gradient(180deg, #5a4a3a 0%, #453525 50%, #352a1a 100%);
-}
-
-.melody-next-btn .toggle-label {
-    color: #ff9933;
-}
-
-.melody-next-btn.active .toggle-led {
-    background: var(--display-orange);
-    box-shadow:
-        0 0 8px var(--display-orange),
-        0 0 16px rgba(255,102,0,0.4);
-}
-
-/* Action buttons container */
-.melody-action-btns {
-    display: flex;
-    gap: 6px;
-}
-
-/* SAVE button */
-.melody-save-btn {
-    background: linear-gradient(180deg, #2a4a3a 0%, #1a352a 50%, #152a20 100%);
-    border-color: #3a5a4a;
-}
-
-.melody-save-btn:hover {
-    background: linear-gradient(180deg, #3a5a4a 0%, #254535 50%, #1a352a 100%);
-}
-
-.melody-save-btn .toggle-label {
-    color: #66cc99;
-}
-
-.melody-save-btn.active .toggle-led {
-    background: #66cc99;
-    box-shadow:
-        0 0 8px #66cc99,
-        0 0 16px rgba(102,204,153,0.4);
-}
-
-/* Saved melodies list */
-.saved-melodies-list {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-
-.saved-melody-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 10px;
-    background: #1a1a1a;
-    border: 1px solid #333;
+    border: 3px solid #ff6600;
     border-radius: 4px;
     cursor: pointer;
-    transition: all 0.1s ease;
+    box-shadow: 0 0 8px rgba(255, 102, 0, 0.5);
+    margin-left: -11px;
 }
 
-.saved-melody-item:hover {
-    background: #252525;
-    border-color: #444;
+.mixer-fader::-moz-range-track {
+    width: 6px;
+    height: 100%;
+    background: linear-gradient(180deg, #444 0%, #222 100%);
+    border-radius: 3px;
+    border: 1px solid #555;
 }
 
-.saved-melody-item.active {
-    background: #2a2520;
+.mixer-fader::-moz-range-thumb {
+    width: 28px;
+    height: 14px;
+    background: #111;
+    border: 3px solid #ff6600;
+    border-radius: 4px;
+    cursor: pointer;
+    box-shadow: 0 0 8px rgba(255, 102, 0, 0.5);
+}
+
+/* Channel Select */
+.channel-select {
+    width: 100%;
+    padding: 3px 2px;
+    margin-top: 6px;
+    background: #1a1a1a;
+    color: var(--text-light);
+    border: 1px solid #333;
+    border-radius: 3px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem;
+    cursor: pointer;
+}
+
+.channel-select:focus {
+    outline: none;
     border-color: var(--display-orange);
 }
 
-.saved-melody-name {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.75rem;
-    color: #888;
+/* FX Channel */
+.fx-label {
+    font-size: 0.55rem;
+    color: var(--text-dim);
+    margin-top: 4px;
 }
 
-.saved-melody-item.active .saved-melody-name {
-    color: var(--display-orange);
-}
-
-.saved-melody-delete {
-    width: 16px;
-    height: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #333;
-    border: none;
-    border-radius: 50%;
-    color: #666;
-    font-size: 0.7rem;
-    cursor: pointer;
-    transition: all 0.1s ease;
-}
-
-.saved-melody-delete:hover {
-    background: #ff4444;
-    color: #fff;
-}
-
-/* ===== CORSO RESPONSIVE ===== */
-@media (max-width: 1150px) {
-    .rack-corso {
-        width: 100%;
-        max-width: 800px;
-    }
-
-    .module-grid {
+/* Responsive */
+@media (max-width: 768px) {
+    .mixer-channels {
         flex-wrap: wrap;
     }
 
-    .module-btn {
-        min-width: 45%;
-    }
-}
-
-@media (max-width: 600px) {
-    .module-btn {
-        min-width: 100%;
+    .mixer-channel {
+        min-width: 60px;
     }
 
-    .lesson-display {
-        padding: 15px;
-        font-size: 0.9rem;
-    }
-
-    .exercise-item {
-        flex-direction: column;
-        align-items: flex-start;
+    .mixer-fader {
+        height: 60px;
     }
 }

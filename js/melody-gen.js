@@ -463,30 +463,13 @@ function getRandomArtist(genre) {
     return artists[Math.floor(Math.random() * artists.length)];
 }
 
-// ===== MELODIC LINES (legacy - kept for compatibility) =====
-const MELODIC_LINES = [
-    {
-        id: 'major-run', name: 'Major Scale', type: 'melody', category: 'foundation', bars: 1, scale: 'major',
-        steps: [
-            {degree: 1, octave: 4, beat: 0, duration: '8n'},
-            {degree: 2, octave: 4, beat: 0.5, duration: '8n'},
-            {degree: 3, octave: 4, beat: 1, duration: '8n'},
-            {degree: 4, octave: 4, beat: 1.5, duration: '8n'},
-            {degree: 5, octave: 4, beat: 2, duration: '8n'},
-            {degree: 6, octave: 4, beat: 2.5, duration: '8n'},
-            {degree: 7, octave: 4, beat: 3, duration: '8n'},
-            {degree: 1, octave: 5, beat: 3.5, duration: '8n'}
-        ]
-    }
-];
-
-console.log('Melody patterns defined:', CHORD_PROGRESSIONS.length, 'chords,', MELODIC_LINES.length, 'melodies');
+console.log('Melody patterns defined:', CHORD_PROGRESSIONS.length, 'chord progressions,', Object.keys(ARTIST_STYLES).length, 'artists');
 
 class MelodyGenerator {
     constructor() {
         // State
         this.isPlaying = false;
-        this.currentKey = 'C';
+        this.currentKey = 'E';  // Default same as BASSIST
         this.currentMode = 'chords';  // 'chords' or 'melody'
         this.currentPattern = null;
         this.currentInstrument = 'piano';
@@ -499,10 +482,6 @@ class MelodyGenerator {
         this.generatedMelody = null;
         this.currentGenre = null;  // Track genre from chord progression
         this.currentChordRoot = null;  // Current chord root note for bass sync
-
-        // Saved melodies
-        this.savedMelodies = [];
-        this.maxSavedMelodies = 8;  // Limit to avoid clutter
 
         // Note conversion map
         this.italianNotes = {
@@ -523,17 +502,14 @@ class MelodyGenerator {
 
         // DOM elements (cached)
         this.playBtn = null;
-        this.keyButtons = null;
         this.chordsBtn = null;
         this.melodyBtn = null;
         this.patternSelect = null;
-        this.soundSelect = null;
         this.octaveDisplay = null;
-        this.volumeSlider = null;
         this.chordNameDisplay = null;
         this.chordNotesDisplay = null;
 
-        // Instrument presets (piano e organ)
+        // Instrument presets (controlled from global AUDIO section)
         this.instrumentPresets = {
             piano: {
                 oscillator: { type: 'triangle' },
@@ -542,6 +518,14 @@ class MelodyGenerator {
             organ: {
                 oscillator: { type: 'sine', partials: [1, 0.5, 0.3, 0.2, 0.1] },
                 envelope: { attack: 0.01, decay: 0.1, sustain: 0.9, release: 0.1 }
+            },
+            epiano: {
+                oscillator: { type: 'sine' },
+                envelope: { attack: 0.02, decay: 0.4, sustain: 0.3, release: 0.8 }
+            },
+            synth: {
+                oscillator: { type: 'square' },
+                envelope: { attack: 0.01, decay: 0.2, sustain: 0.5, release: 0.4 }
             }
         };
 
@@ -566,12 +550,15 @@ class MelodyGenerator {
 
         // Initialize default state
         setTimeout(() => {
-            this.selectKey('E');
+            // Sync KEY from BASSIST (BASSIST is source of truth)
+            if (window.fretboard) {
+                this.currentKey = window.fretboard.rootNote;
+            } else {
+                this.currentKey = 'E';  // Fallback
+            }
             this.selectMode('chords');
             this.selectInstrument('piano');
-            // Load saved melodies from localStorage
-            this.loadMelodiesFromStorage();
-            console.log('MelodyGenerator: Ready');
+            console.log('MelodyGenerator: Ready, KEY synced from BASSIST:', this.currentKey);
         }, 100);
     }
 
@@ -600,46 +587,24 @@ class MelodyGenerator {
         this.playBtn = document.getElementById('melodyPlayBtn');
         this.chordsBtn = document.getElementById('melodyChordsBtn');
         this.melodyBtn = document.getElementById('melodyMelodyBtn');
-        this.volumeSlider = document.getElementById('melodyVolume');
 
         // Pattern dropdown
         this.patternSelect = document.getElementById('melodyPatternSelect');
-
-        // Sound dropdown
-        this.soundSelect = document.getElementById('melodySoundSelect');
 
         // Octave controls
         this.octaveDisplay = document.getElementById('melodyOctDisplay');
         this.octaveMinus = document.getElementById('melodyOctMinus');
         this.octavePlus = document.getElementById('melodyOctPlus');
 
-        // ITA notation toggle
-        this.notationToggle = document.getElementById('melodyNotationToggle');
-
-        // NEXT button for melody regeneration
-        this.nextBtn = document.getElementById('melodyNextBtn');
-
-        // SAVE button
-        this.saveBtn = document.getElementById('melodySaveBtn');
-
         // Display
         this.chordNameDisplay = document.getElementById('chordName');
         this.chordNotesDisplay = document.getElementById('chordNotes');
-
-        // Get key buttons
-        const keyGrid = document.getElementById('melodyKeyButtons');
-        if (keyGrid) {
-            this.keyButtons = keyGrid.querySelectorAll('.root-btn');
-        }
 
         // Populate pattern dropdown
         this.populatePatternSelect();
 
         // Update octave display
         this.updateOctaveDisplay();
-
-        // Build step indicators (default 4/4)
-        this.buildStepIndicators('4/4');
 
         console.log('MelodyGenerator: UI setup complete');
     }
@@ -649,19 +614,6 @@ class MelodyGenerator {
 
         // Clear existing options
         this.patternSelect.innerHTML = '<option value="">-- Select --</option>';
-
-        // Get patterns based on current mode
-        const patterns = (this.currentMode === 'chords')
-            ? CHORD_PROGRESSIONS
-            : MELODIC_LINES;
-
-        // Group by category
-        const categories = {};
-        patterns.forEach(p => {
-            const cat = p.category || 'other';
-            if (!categories[cat]) categories[cat] = [];
-            categories[cat].push(p);
-        });
 
         // Category display names
         const categoryNames = {
@@ -674,20 +626,53 @@ class MelodyGenerator {
             'other': 'OTHER'
         };
 
-        // Create optgroups
-        Object.keys(categories).forEach(cat => {
-            const optgroup = document.createElement('optgroup');
-            optgroup.label = categoryNames[cat] || cat.toUpperCase();
+        if (this.currentMode === 'melody') {
+            // MELODY mode: show artists grouped by genre
+            const genres = ['rock', 'blues', 'funk', 'disco', 'triphop'];
 
-            categories[cat].forEach(p => {
-                const option = document.createElement('option');
-                option.value = p.id;
-                option.textContent = p.name;
-                optgroup.appendChild(option);
+            genres.forEach(genre => {
+                const artists = getArtistsByGenre(genre);
+                if (artists.length === 0) return;
+
+                const optgroup = document.createElement('optgroup');
+                optgroup.label = categoryNames[genre] || genre.toUpperCase();
+
+                artists.forEach(artist => {
+                    const option = document.createElement('option');
+                    option.value = artist.id;
+                    option.textContent = artist.name;
+                    optgroup.appendChild(option);
+                });
+
+                this.patternSelect.appendChild(optgroup);
+            });
+        } else {
+            // CHORDS mode: show chord progressions
+            const patterns = CHORD_PROGRESSIONS;
+
+            // Group by category
+            const categories = {};
+            patterns.forEach(p => {
+                const cat = p.category || 'other';
+                if (!categories[cat]) categories[cat] = [];
+                categories[cat].push(p);
             });
 
-            this.patternSelect.appendChild(optgroup);
-        });
+            // Create optgroups
+            Object.keys(categories).forEach(cat => {
+                const optgroup = document.createElement('optgroup');
+                optgroup.label = categoryNames[cat] || cat.toUpperCase();
+
+                categories[cat].forEach(p => {
+                    const option = document.createElement('option');
+                    option.value = p.id;
+                    option.textContent = p.name;
+                    optgroup.appendChild(option);
+                });
+
+                this.patternSelect.appendChild(optgroup);
+            });
+        }
     }
 
     updateOctaveDisplay() {
@@ -702,14 +687,8 @@ class MelodyGenerator {
             this.playBtn.addEventListener('click', () => this.togglePlay());
         }
 
-        // Key buttons
-        if (this.keyButtons) {
-            this.keyButtons.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    this.selectKey(btn.dataset.key);
-                });
-            });
-        }
+        // KEY is controlled by BASSIST ROOT - sync when it changes
+        // (BASSIST calls melodyGen.selectKey() directly when ROOT changes)
 
         // Mode buttons
         if (this.chordsBtn) {
@@ -726,13 +705,6 @@ class MelodyGenerator {
             });
         }
 
-        // Sound dropdown
-        if (this.soundSelect) {
-            this.soundSelect.addEventListener('change', (e) => {
-                this.selectInstrument(e.target.value);
-            });
-        }
-
         // Octave controls
         if (this.octaveMinus) {
             this.octaveMinus.addEventListener('click', () => this.adjustOctave(-1));
@@ -741,30 +713,7 @@ class MelodyGenerator {
             this.octavePlus.addEventListener('click', () => this.adjustOctave(1));
         }
 
-        // ITA notation toggle
-        if (this.notationToggle) {
-            this.notationToggle.addEventListener('click', () => this.toggleNotation());
-        }
-
-        // NEXT button (for melody mode - generate new melody)
-        if (this.nextBtn) {
-            this.nextBtn.addEventListener('click', () => this.handleNextClick());
-        }
-
-        // SAVE button
-        if (this.saveBtn) {
-            this.saveBtn.addEventListener('click', () => this.handleSaveClick());
-        }
-
-        // Volume slider
-        if (this.volumeSlider) {
-            this.volumeSlider.addEventListener('input', (e) => {
-                const vol = parseInt(e.target.value);
-                // Map 0-100 to -40dB to 0dB
-                const db = (vol / 100) * 40 - 40;
-                this.volume.volume.value = db;
-            });
-        }
+        // Note: Sound and Volume are now controlled from global AUDIO section
 
         console.log('MelodyGenerator: Event listeners attached');
     }
@@ -784,37 +733,7 @@ class MelodyGenerator {
         }
     }
 
-    toggleNotation() {
-        this.useItalianNotation = !this.useItalianNotation;
-
-        // Update toggle button UI
-        if (this.notationToggle) {
-            this.notationToggle.classList.toggle('active', this.useItalianNotation);
-        }
-
-        // Update KEY buttons labels
-        this.updateKeyButtonLabels();
-
-        // Rebuild chord strip with new notation
-        if (this.currentPattern) {
-            this.buildChordStrip();
-            // Also rebuild BASS chord strip if MEL mode is active
-            if (window.fretboard?.melodySyncActive) {
-                window.fretboard.buildBassChordStrip();
-            }
-        }
-
-        console.log('MelodyGenerator: Notation:', this.useItalianNotation ? 'ITA' : 'ABC');
-    }
-
-    updateKeyButtonLabels() {
-        if (!this.keyButtons) return;
-
-        this.keyButtons.forEach(btn => {
-            const key = btn.dataset.key;
-            btn.textContent = this.useItalianNotation ? (this.italianNotes[key] || key) : key;
-        });
-    }
+    // Note: toggleNotation() removed - now handled by global ITA toggle in app.js
 
     // Convert note to Italian notation if enabled
     toDisplayNote(note) {
@@ -830,24 +749,10 @@ class MelodyGenerator {
         return notes.map(n => this.toDisplayNote(n.replace(/\d/g, ''))).join(' - ');
     }
 
-    selectKey(key, fromBass = false) {
+    // Called by BASSIST when ROOT changes - MELODY follows BASSIST
+    selectKey(key) {
         this.currentKey = key;
-        this.updateKeyButtons();
-        console.log('MelodyGenerator: Key selected:', key);
-
-        // Sync with BASS root (avoid infinite loop)
-        if (!fromBass && window.fretboard) {
-            window.fretboard.selectRoot(key, true);
-        }
-
-        // Rebuild chord strip with new key
-        if (this.currentPattern) {
-            this.buildChordStrip();
-            // Also rebuild BASS chord strip if MEL mode is active
-            if (window.fretboard?.melodySyncActive) {
-                window.fretboard.buildBassChordStrip();
-            }
-        }
+        console.log('MelodyGenerator: Key synced from BASSIST:', key);
 
         // Restart playback with new key if playing
         if (this.currentPattern && this.isPlaying) {
@@ -869,28 +774,72 @@ class MelodyGenerator {
         // Clear generated melody when switching modes
         this.generatedMelody = null;
 
+        // Update dropdown to show appropriate options for this mode
+        this.populatePatternSelect();
+
         // Reset display based on mode
         if (mode === 'melody') {
-            this.updateChordDisplay('MELODY', 'Select pattern → random artist melody');
+            this.updateChordDisplay('MELODY', 'Select artist → plays melody in their style');
         } else {
             this.updateChordDisplay('CHORDS', 'Select a pattern');
-            // Hide timeline in chords mode
-            this.hideTimeline();
         }
     }
 
     selectPattern(patternId) {
         if (!patternId) {
             this.currentPattern = null;
-            this.buildChordStrip(); // Clear strip
+            this.currentArtist = null;
             return;
         }
 
+        // In MELODY mode, patternId is actually an artist ID
+        if (this.currentMode === 'melody') {
+            const artist = ARTIST_STYLES[patternId];
+            if (artist) {
+                this.currentArtist = { id: patternId, ...artist };
+                console.log('MelodyGenerator: Artist selected:', artist.name);
+
+                // Sync KEY with BASSIST root (so they start on the same key)
+                if (window.fretboard) {
+                    this.currentKey = window.fretboard.rootNote;
+                    console.log('MelodyGenerator: Synced KEY to BASSIST root:', this.currentKey);
+                }
+
+                // Use a default chord progression for this genre
+                const genreProgressions = {
+                    'rock': 'rock-classic',
+                    'blues': 'blues-12bar',
+                    'funk': 'funk-twochord',
+                    'disco': 'disco-groove',
+                    'triphop': 'triphop-dark'
+                };
+                this.currentPattern = genreProgressions[artist.genre] || 'rock-classic';
+
+                // Also rebuild BASS chord strip if MEL mode is active
+                if (window.fretboard?.melodySyncActive) {
+                    window.fretboard.buildBassChordStrip();
+                }
+
+                // Auto-play
+                if (!this.isPlaying) {
+                    this.play();
+                } else {
+                    this.stop();
+                    this.play();
+                }
+            }
+            return;
+        }
+
+        // CHORDS mode: patternId is a chord progression
         this.currentPattern = patternId;
         console.log('MelodyGenerator: Pattern selected:', patternId);
 
-        // Build chord strip for this pattern
-        this.buildChordStrip();
+        // Sync KEY with BASSIST root (BASSIST is the source of truth)
+        if (window.fretboard) {
+            this.currentKey = window.fretboard.rootNote;
+            console.log('MelodyGenerator: Synced KEY to BASSIST root:', this.currentKey);
+        }
 
         // Also rebuild BASS chord strip if MEL mode is active
         if (window.fretboard?.melodySyncActive) {
@@ -978,10 +927,6 @@ class MelodyGenerator {
             this.playBtn.classList.remove('active');
         }
 
-        // Clear step indicator and chord strip
-        this.clearStepIndicator();
-        this.clearChordStrip();
-
         // Clear display based on mode
         if (this.currentMode === 'melody') {
             this.updateChordDisplay('MELODY', 'Stopped - select pattern to play');
@@ -991,12 +936,6 @@ class MelodyGenerator {
 
         // Clear generated melody (it "self-destructs")
         this.generatedMelody = null;
-
-        // Clear timeline
-        this.clearTimeline();
-
-        // Clear mini fretboard
-        this.clearMiniFretboard();
 
         // Clear fretboard chord display
         if (window.fretboard) {
@@ -1030,9 +969,6 @@ class MelodyGenerator {
 
         console.log('MelodyGenerator: Starting sequence -', bars, 'bars,', totalSteps, 'steps, time sig:', timeSignature);
 
-        // Build step indicators for this time signature
-        this.buildStepIndicators(timeSignature);
-
         // Build step array from pattern
         const stepArray = this.buildStepArray(pattern, totalSteps);
 
@@ -1048,11 +984,6 @@ class MelodyGenerator {
             const currentBar = Math.floor(step / stepsPerBar);
             const stepInBar = step % stepsPerBar;
 
-            // Update step indicator on each step
-            Tone.Draw.schedule(() => {
-                this.updateStepIndicator(stepInBar);
-            }, time);
-
             const event = stepArray[step];
             if (!event) return;
 
@@ -1060,10 +991,8 @@ class MelodyGenerator {
             const chordIndex = pattern.steps.indexOf(event);
             if (chordIndex !== -1 && chordIndex !== currentChordIndex) {
                 currentChordIndex = chordIndex;
-                // Update chord strip position when chord changes (both MELODY and BASS)
+                // Update BASS chord strip position when chord changes
                 Tone.Draw.schedule(() => {
-                    this.updateChordStripPosition(currentChordIndex);
-                    // Also update BASS chord strip
                     if (window.fretboard?.melodySyncActive) {
                         window.fretboard.updateBassChordStripPosition(currentChordIndex);
                     }
@@ -1111,9 +1040,6 @@ class MelodyGenerator {
 
                         // Get chord notes without octave
                         const chordNotes = notes.map(n => n.replace(/\d/g, ''));
-
-                        // Update mini fretboard
-                        this.updateMiniFretboard(this.currentKey, chordNotes);
 
                         // Sync with BASS fretboard UI (visual only)
                         if (window.fretboard) {
@@ -1202,16 +1128,10 @@ class MelodyGenerator {
             return null;
         }
 
-        const patterns = (this.currentMode === 'chords')
-            ? CHORD_PROGRESSIONS
-            : MELODIC_LINES;
-
-        console.log('MelodyGenerator: Looking for pattern', this.currentPattern, 'in', this.currentMode, 'mode');
-        console.log('MelodyGenerator: Available patterns:', patterns?.map(p => p.id));
-
-        const found = patterns?.find(p => p.id === this.currentPattern);
+        // Always use CHORD_PROGRESSIONS (melody mode uses them for harmonic structure)
+        const found = CHORD_PROGRESSIONS.find(p => p.id === this.currentPattern);
         if (!found) {
-            console.log('MelodyGenerator: Pattern NOT FOUND!');
+            console.log('MelodyGenerator: Pattern NOT FOUND:', this.currentPattern);
         }
         return found;
     }
@@ -1225,14 +1145,6 @@ class MelodyGenerator {
     }
 
     // ===== UI UPDATE METHODS =====
-
-    updateKeyButtons() {
-        if (!this.keyButtons) return;
-
-        this.keyButtons.forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.key === this.currentKey);
-        });
-    }
 
     updateModeButtons() {
         if (this.chordsBtn && this.melodyBtn) {
@@ -1273,297 +1185,6 @@ class MelodyGenerator {
         return this.toDisplayNote(rootNote);
     }
 
-    // Build chord strip showing full progression
-    buildChordStrip() {
-        const strip = document.getElementById('chordStrip');
-        if (!strip) {
-            console.log('ChordStrip: element not found');
-            return;
-        }
-
-        // Always search in CHORD_PROGRESSIONS for the strip
-        const pattern = CHORD_PROGRESSIONS.find(p => p.id === this.currentPattern);
-        console.log('ChordStrip: building for pattern', this.currentPattern, pattern);
-
-        if (!pattern || !pattern.steps) {
-            strip.innerHTML = '<span style="color: #555;">Select a pattern</span>';
-            return;
-        }
-
-        strip.innerHTML = '';
-
-        pattern.steps.forEach((chord, index) => {
-            // Calculate chord root note
-            const keyIndex = MELODY_NOTES.indexOf(this.currentKey);
-            const degreeOffset = SCALE_DEGREES[chord.degree] || 0;
-            const rootIndex = (keyIndex + degreeOffset) % 12;
-            const rootNote = MELODY_NOTES[rootIndex];
-
-            // Create chord item
-            const item = document.createElement('div');
-            item.className = 'chord-strip-item';
-            item.dataset.index = index;
-
-            const rootDiv = document.createElement('div');
-            rootDiv.className = 'chord-root';
-            rootDiv.textContent = this.toDisplayNote(rootNote);
-
-            const qualityDiv = document.createElement('div');
-            qualityDiv.className = 'chord-quality';
-            // Show quality only if not major triad
-            qualityDiv.textContent = chord.quality === 'maj' ? '' : chord.quality;
-
-            item.appendChild(rootDiv);
-            item.appendChild(qualityDiv);
-            strip.appendChild(item);
-
-            // Add arrow between chords (except last)
-            if (index < pattern.steps.length - 1) {
-                const arrow = document.createElement('span');
-                arrow.className = 'chord-strip-arrow';
-                arrow.textContent = '→';
-                strip.appendChild(arrow);
-            }
-        });
-    }
-
-    // Update chord strip to highlight current chord
-    updateChordStripPosition(currentBar) {
-        const strip = document.getElementById('chordStrip');
-        if (!strip) return;
-
-        const items = strip.querySelectorAll('.chord-strip-item');
-        items.forEach((item, index) => {
-            item.classList.remove('current', 'next');
-            if (index === currentBar) {
-                item.classList.add('current');
-            } else if (index === currentBar + 1 || (currentBar === items.length - 1 && index === 0)) {
-                item.classList.add('next');
-            }
-        });
-    }
-
-    // Clear chord strip highlighting
-    clearChordStrip() {
-        const strip = document.getElementById('chordStrip');
-        if (!strip) return;
-
-        strip.querySelectorAll('.chord-strip-item').forEach(item => {
-            item.classList.remove('current', 'next');
-        });
-    }
-
-    // Build step indicators (16 steps for 4/4, 12 steps for 12/8 shuffle)
-    buildStepIndicators(timeSignature = '4/4') {
-        const stepRow = document.getElementById('melodyStepRow');
-        if (!stepRow) return;
-
-        // Clear existing
-        stepRow.innerHTML = '';
-
-        // Determine steps per beat based on time signature
-        const isTriplet = (timeSignature === '12/8' || timeSignature === '6/8');
-        const stepsPerBeat = isTriplet ? 3 : 4;
-        const numBeats = (timeSignature === '6/8') ? 2 : 4;
-
-        // Create beat groups
-        for (let beat = 0; beat < numBeats; beat++) {
-            const beatGroup = document.createElement('div');
-            beatGroup.className = 'beat-group-steps';
-            if (isTriplet) beatGroup.classList.add('triplet');
-
-            for (let step = 0; step < stepsPerBeat; step++) {
-                const stepDiv = document.createElement('div');
-                stepDiv.className = 'step';
-                stepDiv.dataset.step = beat * stepsPerBeat + step;
-                beatGroup.appendChild(stepDiv);
-            }
-
-            stepRow.appendChild(beatGroup);
-        }
-
-        // Update beat number display for 6/8
-        const beatRow = document.querySelector('#melodyPatternSection .beat-row');
-        if (beatRow) {
-            const beatGroups = beatRow.querySelectorAll('.beat-group');
-            beatGroups.forEach((group, index) => {
-                group.style.display = (timeSignature === '6/8' && index >= 2) ? 'none' : 'flex';
-            });
-        }
-    }
-
-    // Update step indicator (highlight current step within bar)
-    updateStepIndicator(stepInBar) {
-        const stepRow = document.getElementById('melodyStepRow');
-        if (!stepRow) return;
-
-        const steps = stepRow.querySelectorAll('.step');
-        steps.forEach((step, index) => {
-            step.classList.toggle('playing', index === stepInBar);
-        });
-
-        // Also update beat numbers
-        const beatNums = document.querySelectorAll('#melodyPatternSection .beat-num');
-        const currentBeat = Math.floor(stepInBar / 4) + 1;
-        beatNums.forEach(num => {
-            const beat = parseInt(num.dataset.beat);
-            num.classList.toggle('active', beat === currentBeat);
-            num.classList.toggle('downbeat', beat === currentBeat && stepInBar % 4 === 0);
-        });
-    }
-
-    // Clear step indicator
-    clearStepIndicator() {
-        const stepRow = document.getElementById('melodyStepRow');
-        if (stepRow) {
-            stepRow.querySelectorAll('.step').forEach(step => {
-                step.classList.remove('playing', 'active');
-            });
-        }
-
-        // Clear beat numbers
-        const beatNums = document.querySelectorAll('#melodyPatternSection .beat-num');
-        beatNums.forEach(num => {
-            num.classList.remove('active', 'downbeat');
-        });
-    }
-
-    // Update mini fretboard with chord notes (ONE position per note)
-    updateMiniFretboard(root, chordNotes) {
-        const miniFretboard = document.getElementById('miniFretboard');
-        if (!miniFretboard) return;
-
-        // String tuning (standard bass)
-        const strings = {
-            'E': ['E', 'F', 'F#', 'G', 'G#', 'A', 'A#'],
-            'A': ['A', 'A#', 'B', 'C', 'C#', 'D', 'D#'],
-            'D': ['D', 'D#', 'E', 'F', 'F#', 'G', 'G#'],
-            'G': ['G', 'G#', 'A', 'A#', 'B', 'C', 'C#']
-        };
-        const stringOrder = ['E', 'A', 'D', 'G'];
-
-        // Clear all notes
-        miniFretboard.querySelectorAll('.mini-note').forEach(n => n.remove());
-
-        // Find ONE best position per chord note
-        const positions = [];
-
-        // Find root first (prefer E or A string, low frets)
-        let rootPos = null;
-        for (const stringName of stringOrder) {
-            const fretIndex = strings[stringName].indexOf(root);
-            if (fretIndex !== -1) {
-                if (!rootPos || fretIndex < rootPos.fret) {
-                    rootPos = { string: stringName, fret: fretIndex, note: root, isRoot: true };
-                }
-            }
-        }
-        if (rootPos) positions.push(rootPos);
-
-        // Find other chord notes close to root
-        const rootFret = rootPos?.fret || 0;
-        chordNotes.forEach(note => {
-            if (note === root) return; // Already added
-
-            let bestPos = null;
-            let bestDist = Infinity;
-
-            for (const stringName of stringOrder) {
-                const fretIndex = strings[stringName].indexOf(note);
-                if (fretIndex !== -1) {
-                    const dist = Math.abs(fretIndex - rootFret);
-                    if (dist < bestDist) {
-                        bestDist = dist;
-                        bestPos = { string: stringName, fret: fretIndex, note, isRoot: false };
-                    }
-                }
-            }
-            if (bestPos) positions.push(bestPos);
-        });
-
-        // Add notes to fretboard
-        positions.forEach(pos => {
-            const stringEl = miniFretboard.querySelector(`.mini-string[data-string="${pos.string}"]`);
-            if (!stringEl) return;
-
-            const fretEl = stringEl.querySelectorAll('.mini-fret')[pos.fret];
-            if (!fretEl) return;
-
-            const noteDiv = document.createElement('div');
-            noteDiv.className = 'mini-note';
-            noteDiv.classList.add(pos.isRoot ? 'root' : 'active');
-            if (pos.isRoot) noteDiv.textContent = 'R';
-
-            fretEl.appendChild(noteDiv);
-        });
-    }
-
-    // Clear mini fretboard
-    clearMiniFretboard() {
-        const miniFretboard = document.getElementById('miniFretboard');
-        if (miniFretboard) {
-            miniFretboard.querySelectorAll('.mini-note').forEach(n => n.remove());
-        }
-    }
-
-    // Update mini fretboard for melody mode (single note)
-    updateMiniFretboardMelody(noteName) {
-        const miniFretboard = document.getElementById('miniFretboard');
-        if (!miniFretboard) return;
-
-        // String tuning (standard bass) - notes at each fret
-        // Order: E (lowest) to G (highest) for priority
-        const stringOrder = ['E', 'A', 'D', 'G'];
-        const strings = {
-            'E': ['E', 'F', 'F#', 'G', 'G#', 'A', 'A#'],
-            'A': ['A', 'A#', 'B', 'C', 'C#', 'D', 'D#'],
-            'D': ['D', 'D#', 'E', 'F', 'F#', 'G', 'G#'],
-            'G': ['G', 'G#', 'A', 'A#', 'B', 'C', 'C#']
-        };
-
-        // Clear all notes first
-        miniFretboard.querySelectorAll('.mini-note').forEach(n => n.remove());
-
-        // Normalize note name (handle flats)
-        const normalizedNote = this.normalizeNoteName(noteName);
-
-        // Find the BEST position (lowest fret, prefer lower strings)
-        let bestPosition = null;
-
-        for (const stringName of stringOrder) {
-            const notes = strings[stringName];
-            for (let fretIndex = 0; fretIndex < notes.length; fretIndex++) {
-                if (notes[fretIndex] === normalizedNote) {
-                    // Found a position - prefer lower frets
-                    if (!bestPosition || fretIndex < bestPosition.fret) {
-                        bestPosition = { string: stringName, fret: fretIndex };
-                    }
-                    break; // Move to next string
-                }
-            }
-        }
-
-        // Show only the best position
-        if (bestPosition) {
-            const stringEl = miniFretboard.querySelector(`.mini-string[data-string="${bestPosition.string}"]`);
-            if (stringEl) {
-                const frets = stringEl.querySelectorAll('.mini-fret');
-                const fretEl = frets[bestPosition.fret];
-                if (fretEl) {
-                    const noteDiv = document.createElement('div');
-                    noteDiv.className = 'mini-note active';
-
-                    // Show note name in display notation
-                    const displayNote = this.useItalianNotation ?
-                        (this.italianNotes[normalizedNote] || normalizedNote) : normalizedNote;
-                    noteDiv.textContent = displayNote.replace('#', '');
-
-                    fretEl.appendChild(noteDiv);
-                }
-            }
-        }
-    }
-
     // Normalize note name (convert flats to sharps for comparison)
     normalizeNoteName(note) {
         const flatToSharp = {
@@ -1571,137 +1192,6 @@ class MelodyGenerator {
             'Ab': 'G#', 'Bb': 'A#', 'Cb': 'B'
         };
         return flatToSharp[note] || note;
-    }
-
-    // Build the melody timeline display
-    buildMelodyTimeline() {
-        const timelineSection = document.getElementById('melodyTimelineSection');
-        const timeline = document.getElementById('melodyTimeline');
-        if (!timeline || !this.generatedMelody) return;
-
-        // Show timeline section
-        if (timelineSection) {
-            timelineSection.style.display = 'block';
-        }
-
-        // Clear existing timeline
-        timeline.innerHTML = '';
-
-        const notes = this.generatedMelody.notes;
-        const totalBars = this.generatedMelody.bars || 1;
-
-        // Build a step grid (4 steps per beat, 16 per bar)
-        const stepsPerBar = 16;
-        const totalSteps = totalBars * stepsPerBar;
-        const stepGrid = new Array(totalSteps).fill(null);
-
-        // Place notes in grid
-        notes.forEach((note, index) => {
-            const stepIndex = Math.floor(note.beat * 4);
-            if (stepIndex >= 0 && stepIndex < totalSteps) {
-                stepGrid[stepIndex] = { note, index };
-            }
-        });
-
-        // Build timeline with notes and rests
-        let noteIndex = 0;
-        for (let step = 0; step < totalSteps; step++) {
-            // Add bar marker at bar boundaries (except first)
-            if (step > 0 && step % stepsPerBar === 0) {
-                const marker = document.createElement('div');
-                marker.className = 'timeline-bar-marker';
-                timeline.appendChild(marker);
-            }
-
-            const cell = stepGrid[step];
-            const box = document.createElement('div');
-
-            if (cell) {
-                // Note
-                box.className = 'timeline-note';
-                box.dataset.index = cell.index;
-
-                const noteName = this.getNoteFromInterval(
-                    this.currentKey,
-                    cell.note.interval,
-                    this.currentOctave + 1
-                );
-                const noteOnly = noteName.replace(/\d/g, '');
-                const displayNote = this.useItalianNotation ?
-                    (this.italianNotes[noteOnly] || noteOnly) : noteOnly;
-
-                box.textContent = displayNote;
-            } else {
-                // Rest/pause
-                box.className = 'timeline-note timeline-rest';
-                box.textContent = '·';
-            }
-
-            timeline.appendChild(box);
-        }
-
-        console.log('MelodyGenerator: Timeline built with', totalSteps, 'steps,', notes.length, 'notes');
-    }
-
-    // Update timeline to highlight current step
-    updateTimelinePosition(stepIndex) {
-        const timeline = document.getElementById('melodyTimeline');
-        if (!timeline) return;
-
-        // Track the current element for scrolling
-        let currentElement = null;
-
-        // Adjust index to account for bar markers
-        let actualIndex = 0;
-        const children = timeline.children;
-        for (let i = 0; i < children.length; i++) {
-            if (children[i].classList.contains('timeline-bar-marker')) {
-                continue; // Skip bar markers
-            }
-
-            children[i].classList.remove('current', 'played', 'next');
-
-            if (actualIndex < stepIndex) {
-                children[i].classList.add('played');
-            } else if (actualIndex === stepIndex) {
-                children[i].classList.add('current');
-                currentElement = children[i];
-            } else if (actualIndex === stepIndex + 1) {
-                children[i].classList.add('next');
-            }
-            actualIndex++;
-        }
-
-        // Scroll timeline horizontally (not the page)
-        if (currentElement) {
-            const timelineRect = timeline.getBoundingClientRect();
-            const elementRect = currentElement.getBoundingClientRect();
-            const elementCenter = elementRect.left + elementRect.width / 2;
-            const timelineCenter = timelineRect.left + timelineRect.width / 2;
-
-            // Only scroll if element is not centered
-            if (Math.abs(elementCenter - timelineCenter) > timelineRect.width / 4) {
-                const scrollOffset = currentElement.offsetLeft - timeline.offsetWidth / 2 + currentElement.offsetWidth / 2;
-                timeline.scrollTo({ left: scrollOffset, behavior: 'smooth' });
-            }
-        }
-    }
-
-    // Hide timeline (for chords mode)
-    hideTimeline() {
-        const timelineSection = document.getElementById('melodyTimelineSection');
-        if (timelineSection) {
-            timelineSection.style.display = 'none';
-        }
-    }
-
-    // Clear timeline
-    clearTimeline() {
-        const timeline = document.getElementById('melodyTimeline');
-        if (timeline) {
-            timeline.innerHTML = '';
-        }
-        this.hideTimeline();
     }
 
     // ===== MELODY GENERATION METHODS =====
@@ -1857,29 +1347,35 @@ class MelodyGenerator {
         return pattern?.category || 'rock';
     }
 
-    // Start melody playback with random artist
+    // Start melody playback with selected or random artist
     startMelodyPlayback() {
-        // Get genre from selected chord progression
-        const genre = this.detectGenreFromPattern();
-        this.currentGenre = genre;
+        // Use selected artist if available, otherwise pick random from genre
+        let artistId;
+        if (this.currentArtist) {
+            artistId = this.currentArtist.id;
+            this.currentGenre = this.currentArtist.genre;
+            console.log('MelodyGenerator: Using selected artist:', this.currentArtist.name);
+        } else {
+            // Get genre from selected chord progression
+            const genre = this.detectGenreFromPattern();
+            this.currentGenre = genre;
 
-        // Pick random artist from that genre
-        const artist = getRandomArtist(genre);
-        if (!artist) {
-            console.log('MelodyGenerator: No artists found for genre:', genre);
-            return;
+            // Pick random artist from that genre
+            const artist = getRandomArtist(genre);
+            if (!artist) {
+                console.log('MelodyGenerator: No artists found for genre:', genre);
+                return;
+            }
+            artistId = artist.id;
         }
 
         // Generate new melody
-        this.generateMelodyInStyle(artist.id);
+        this.generateMelodyInStyle(artistId);
 
         if (!this.generatedMelody) return;
 
         // Update display
         this.updateMelodyDisplay();
-
-        // Build timeline visualization
-        this.buildMelodyTimeline();
 
         // Create and start sequence
         this.startMelodySequence();
@@ -1915,9 +1411,6 @@ class MelodyGenerator {
             ? PATTERNS[window.beatGen.currentPattern]
             : null;
         const timeSignature = drumPattern?.timeSignature || '4/4';
-
-        // Build step indicators for current time signature
-        this.buildStepIndicators(timeSignature);
 
         const melody = this.generatedMelody;
         const notes = melody.notes;
@@ -1961,23 +1454,25 @@ class MelodyGenerator {
             if (newBar !== currentBar || step === 0) {
                 currentBar = newBar;
 
-                // Trigger bass on downbeat of each bar
-                if (window.fretboard?.isPlayingMelody) {
-                    // Get the chord root for this bar from the progression
-                    const chordRoot = this.getChordRootForBar(currentBar);
-                    console.log('MELODY: Bar', currentBar, '- triggering bass root:', chordRoot);
+                // Get the chord root for this bar from the progression
+                const chordRoot = this.getChordRootForBar(currentBar);
+
+                // If MEL mode is active in BASSIST, sync the fretboard and play bass
+                if (window.fretboard?.melodySyncActive) {
+                    console.log('MELODY: Bar', currentBar, '- syncing bass to chord:', chordRoot);
+
+                    // Play bass root note (audio - must be outside Draw.schedule)
                     window.fretboard.playChordRoot(chordRoot);
+
+                    // Update fretboard display with chord root (visual - inside Draw.schedule)
+                    Tone.Draw.schedule(() => {
+                        window.fretboard.showMelodyChord(chordRoot, [chordRoot]);
+                    }, time);
                 }
             }
 
-            // Always update timeline position, step indicator and chord strip
-            const currentStep = step;
-            const stepInBar = step % stepsPerBar;
+            // Update BASS chord strip
             Tone.Draw.schedule(() => {
-                this.updateTimelinePosition(currentStep);
-                this.updateStepIndicator(stepInBar);
-                this.updateChordStripPosition(currentBar);
-                // Also update BASS chord strip
                 if (window.fretboard?.melodySyncActive) {
                     window.fretboard.updateBassChordStripPosition(currentBar);
                 }
@@ -2010,14 +1505,6 @@ class MelodyGenerator {
                     noteName,
                     `${this.generatedMelody.artistName} [${barNum}/${totalBars}]`
                 );
-
-                // Update mini fretboard with current note
-                this.updateMiniFretboardMelody(noteOnly);
-
-                // Sync with BASS fretboard
-                if (window.fretboard) {
-                    window.fretboard.showMelodyChord(noteOnly, [noteOnly]);
-                }
             }, time);
 
         }, [...Array(totalSteps).keys()], isTriplet ? '8t' : '16n');
@@ -2046,192 +1533,6 @@ class MelodyGenerator {
 
         // Generate and start new melody
         this.startMelodyPlayback();
-    }
-
-    // Handle NEXT button click
-    handleNextClick() {
-        // Only works in melody mode and when a pattern is selected
-        if (this.currentMode !== 'melody') {
-            this.updateChordDisplay('NEXT', 'Switch to MELODY mode first');
-            return;
-        }
-
-        if (!this.currentPattern) {
-            this.updateChordDisplay('NEXT', 'Select a pattern first');
-            return;
-        }
-
-        // Flash the NEXT button LED
-        if (this.nextBtn) {
-            this.nextBtn.classList.add('active');
-            setTimeout(() => this.nextBtn.classList.remove('active'), 200);
-        }
-
-        // Generate new melody
-        this.generateNextMelody();
-
-        console.log('MelodyGenerator: NEXT clicked - generating new melody');
-    }
-
-    // Handle SAVE button click
-    handleSaveClick() {
-        if (!this.generatedMelody) {
-            this.updateChordDisplay('SAVE', 'No melody to save');
-            return;
-        }
-
-        // Check limit
-        if (this.savedMelodies.length >= this.maxSavedMelodies) {
-            this.updateChordDisplay('FULL', `Max ${this.maxSavedMelodies} saved`);
-            return;
-        }
-
-        // Flash the SAVE button LED
-        if (this.saveBtn) {
-            this.saveBtn.classList.add('active');
-            setTimeout(() => this.saveBtn.classList.remove('active'), 300);
-        }
-
-        // Save a copy of the current melody
-        const savedMelody = {
-            ...this.generatedMelody,
-            id: Date.now(),
-            savedAt: new Date().toLocaleTimeString(),
-            key: this.currentKey,
-            pattern: this.currentPattern
-        };
-
-        this.savedMelodies.push(savedMelody);
-        this.saveMelodiesToStorage();
-        this.updateSavedMelodiesList();
-
-        this.updateChordDisplay('SAVED!', `#${this.savedMelodies.length} - ${savedMelody.artistName}`);
-
-        console.log('MelodyGenerator: Melody saved', savedMelody.title);
-    }
-
-    // Update the saved melodies UI list
-    updateSavedMelodiesList() {
-        const section = document.getElementById('savedMelodiesSection');
-        const list = document.getElementById('savedMelodiesList');
-        if (!list) return;
-
-        // Show/hide section
-        if (section) {
-            section.style.display = this.savedMelodies.length > 0 ? 'block' : 'none';
-        }
-
-        // Clear list
-        list.innerHTML = '';
-
-        // Add each saved melody
-        this.savedMelodies.forEach((melody, index) => {
-            const item = document.createElement('div');
-            item.className = 'saved-melody-item';
-            item.dataset.id = melody.id;
-
-            const name = document.createElement('span');
-            name.className = 'saved-melody-name';
-            name.textContent = `${index + 1}. ${melody.artistName}`;
-
-            const deleteBtn = document.createElement('button');
-            deleteBtn.className = 'saved-melody-delete';
-            deleteBtn.textContent = '×';
-            deleteBtn.onclick = (e) => {
-                e.stopPropagation();
-                this.deleteSavedMelody(melody.id);
-            };
-
-            item.appendChild(name);
-            item.appendChild(deleteBtn);
-
-            // Click to load
-            item.onclick = () => this.loadSavedMelody(melody.id);
-
-            list.appendChild(item);
-        });
-    }
-
-    // Load a saved melody
-    async loadSavedMelody(id) {
-        const melody = this.savedMelodies.find(m => m.id === id);
-        if (!melody) return;
-
-        // Stop current playback
-        if (this.isPlaying) {
-            this.stop();
-        }
-
-        // Start audio context (required for playback)
-        await Tone.start();
-
-        // Restore melody state
-        this.generatedMelody = { ...melody };
-        this.currentKey = melody.key;
-        this.currentPattern = melody.pattern;
-
-        // Update key buttons
-        this.updateKeyButtons();
-
-        // Update pattern dropdown
-        if (this.patternSelect) {
-            this.patternSelect.value = melody.pattern;
-        }
-
-        // Switch to melody mode (but don't clear the melody we just loaded)
-        this.currentMode = 'melody';
-        this.updateModeButtons();
-
-        // Build timeline
-        this.buildMelodyTimeline();
-
-        // Update display
-        this.updateChordDisplay('▶ PLAY', melody.artistName);
-
-        // Highlight the loaded item
-        document.querySelectorAll('.saved-melody-item').forEach(item => {
-            item.classList.toggle('active', item.dataset.id == id);
-        });
-
-        // Start playing
-        this.isPlaying = true;
-        if (this.playBtn) this.playBtn.classList.add('active');
-        this.startMelodySequence();
-
-        console.log('MelodyGenerator: Loaded and playing saved melody', melody.title);
-    }
-
-    // Delete a saved melody
-    deleteSavedMelody(id) {
-        this.savedMelodies = this.savedMelodies.filter(m => m.id !== id);
-        this.saveMelodiesToStorage();
-        this.updateSavedMelodiesList();
-        console.log('MelodyGenerator: Deleted saved melody', id);
-    }
-
-    // Save melodies to localStorage
-    saveMelodiesToStorage() {
-        try {
-            localStorage.setItem('drummer_saved_melodies', JSON.stringify(this.savedMelodies));
-            console.log('MelodyGenerator: Saved', this.savedMelodies.length, 'melodies to storage');
-        } catch (e) {
-            console.warn('MelodyGenerator: Could not save to localStorage', e);
-        }
-    }
-
-    // Load melodies from localStorage
-    loadMelodiesFromStorage() {
-        try {
-            const data = localStorage.getItem('drummer_saved_melodies');
-            if (data) {
-                this.savedMelodies = JSON.parse(data);
-                this.updateSavedMelodiesList();
-                console.log('MelodyGenerator: Loaded', this.savedMelodies.length, 'melodies from storage');
-            }
-        } catch (e) {
-            console.warn('MelodyGenerator: Could not load from localStorage', e);
-            this.savedMelodies = [];
-        }
     }
 }
 
